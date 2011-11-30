@@ -1,0 +1,84 @@
+/** 
+* @file
+* Default dropdown style definitions.
+*/
+
+/* @group Behavior */
+
+.pulldown,
+.pulldown ul {
+  list-style: none;
+  margin: 0;
+  outline: 1px dotted gray;
+  padding: 0;
+}
+
+.pulldown {
+  position: relative;
+}
+
+.pulldown ul {
+  display: none; /* Hide sub-menus */
+  left: 0; /* LTR */
+  position: absolute;
+  width: 4em;
+  z-index: 200;
+}
+
+.pulldown ul {
+  left: 4em; /* LTR */
+  top: 0;
+}
+
+.pulldown li,
+.pulldown a {
+  position: relative;
+}
+
+.pulldown li:hover,
+.pulldown a:hover {
+  cursor: pointer;
+}
+
+.pulldown li {
+  z-index: 50;
+}
+
+.pulldown li:hover {
+  background-color: rgba(0, 255, 255, 0.5);
+  visibility: inherit; /* fixes IE7 'sticky bug' */
+  z-index: 51; /* Pull the active trail li's above the other li's */
+}
+
+.pulldown li:hover > ul { /* Enable sub-menus on the main menu */
+  display: block;
+}
+
+.pulldown li + li {
+  margin-left: 0; /* LTR */
+  padding-left: 0; /* LTR */
+}
+
+.pulldown a {
+  display: block;
+  line-height: 1em; /* this prevents the value "normal" from being returned as the line-height */
+  position: relative;
+  width: auto;
+}
+
+/* @end */
+
+/* @group Debug */
+
+.flexipanda.debug {
+  background-color: black;
+  border: 1px solid black;
+  height: 200px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 200px;
+  z-index: 100;
+}
+
+/* @end */
