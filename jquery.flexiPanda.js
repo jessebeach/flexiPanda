@@ -52,7 +52,9 @@
           $this
           .bind('mouseenter.flexiPanda', clearClean)
           .bind('mouseleave.flexiPanda', {delay: o.delays.menu}, prepareClean)
-          .bind('clean.flexiPanda', doClean);
+          .bind('reset.flexiPanda', clearClean)
+          .bind('clean.flexiPanda', doClean)
+          .addClass('flexiPanda-root');
           
           $this.find('li')
           .data('flexiPanda', {
@@ -94,8 +96,8 @@
     $.fn.flexiPanda.defaults = {
       dev: false,
       delays: {
-        menu: 500,
-        items: 150
+        menu: 1000,
+        items: 200
       }
     };
   
@@ -128,6 +130,16 @@
       .trigger('reset')
       .siblings('li')
       .trigger('prepareClean')
+      .end()
+      .closest('.flexiPanda-root')
+      .trigger('reset')
+      .end()
+      .parentsUntil('.flexiPanda-root')
+      .filter('li')
+      .siblings('li')
+      .trigger('prepareClean')
+      .end()
+      .end()
       .end()
       .addClass('hovered');
     }
