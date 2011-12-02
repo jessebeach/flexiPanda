@@ -123,6 +123,10 @@
           func = $.proxy($.fn.trigger, $this, 'clean');
       $this.data('flexiPanda').timers.push(setTimeout(func, event.data.delay));
     }
+    function doClean (event) {
+      event.stopPropagation();
+      $(this).find('.hovered').andSelf().removeClass('hovered');
+    }
     function itemHover (event) {
       event.stopPropagation();
       var $this = $(this);
@@ -142,10 +146,6 @@
       .end()
       .end()
       .addClass('hovered');
-    }
-    function doClean (event) {
-      event.stopPropagation();
-      $(this).find('.hovered').andSelf().removeClass('hovered');
     }
   
     // private function for debugging
