@@ -45,18 +45,23 @@
             /* Set up the data. */
             $this.data('flexiPanda', {
               root : $this,
-              timers: []
+              timers : []
             }); 
           }
           // Set up the events.
           $this
-          .bind('mouseenter.flexiPanda', enter)
-          .bind('mouseleave.flexiPanda', leave)
-          .bind('clean.flexiPanda', dismiss);
+          .bind('mouseenter.flexiPanda', clearClean)
+          .bind('mouseleave.flexiPanda', {delay: o.delays.menu}, prepareClean)
+          .bind('clean.flexiPanda', doClean);
           
           $this.find('li')
+          .data('flexiPanda', {
+            timers : []
+          })
           .bind('mouseover.flexiPanda', itemHover)
-          .bind('clean.flexiPanda', dismiss);
+          .bind('reset.flexiPanda', clearClean)
+          .bind('prepareClean.flexiPanda', {delay: o.delays.items}, prepareClean)
+          .bind('clean.flexiPanda', doClean);
           
           // Create event bindings
           $(window).bind('resize.flexiPanda', methods.refresh);
@@ -87,7 +92,11 @@
       
     // plugin defaults
     $.fn.flexiPanda.defaults = {
-      dev: false
+      dev: false,
+      delays: {
+        menu: 500,
+        items: 150
+      }
     };
   
     // public functions definition
@@ -96,28 +105,33 @@
     };
     
     // private functions definition
-    function enter (event) {
+    function clearClean (event) {
+      event.stopPropagation();
       var $this = $(this);
       while ($this.data('flexiPanda').timers.length > 0) {
         clearTimeout($this.data('flexiPanda').timers.pop());
       }
     }
-    function leave (event) {
+    function prepareClean (event) {
+      event.stopPropagation();
       // Bind the clean event trigger to $(this) and pass it to the setTimeout.
       // The bind is neccessary so that trigger is called the on the correct
       // pulldown element, rendering this to the correct context.
-      var func = $.proxy($.fn.trigger, $(this), 'clean');
-      $(this).data('flexiPanda').timers.push(setTimeout(func, 2000));
+      var $this = $(this),
+          func = $.proxy($.fn.trigger, $this, 'clean');
+      $this.data('flexiPanda').timers.push(setTimeout(func, event.data.delay));
     }
     function itemHover (event) {
+      event.stopPropagation();
       var $this = $(this);
       $this
+      .trigger('reset')
       .siblings('li')
-      .trigger('clean')
+      .trigger('prepareClean')
       .end()
       .addClass('hovered');
     }
-    function dismiss (event) {
+    function doClean (event) {
       event.stopPropagation();
       $(this).find('.hovered').andSelf().removeClass('hovered');
     }
