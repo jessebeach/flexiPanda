@@ -43,14 +43,20 @@
           // If the plugin hasn't been initialized yet
           if (!data) {
             /* Set up the data. */
-            $(this).data('flexiPanda', {
-              target : $this
+            $this.data('flexiPanda', {
+              root : $this,
+              timers: []
             }); 
           }
-          // Set up the hover help.
-          $li = $this.find('li')
-          .bind('mouseenter', over)
-          .bind('mouseout', out);
+          // Set up the events.
+          $this
+          .bind('mouseenter.flexiPanda', enter)
+          .bind('mouseleave.flexiPanda', leave)
+          .bind('clean.flexiPanda', dismiss);
+          
+          $this.find('li')
+          .bind('mouseover.flexiPanda', itemHover)
+          .bind('clean.flexiPanda', dismiss);
           
           // Create event bindings
           $(window).bind('resize.flexiPanda', methods.refresh);
@@ -67,7 +73,7 @@
       update : function () {}
     };
 
-    // replace 'flexiPanda' with the name of your plugin
+    // Instantiation.
     $.fn.flexiPanda = function (method) {
       // Method calling logic
       if (methods[method]) {
@@ -90,17 +96,34 @@
     };
     
     // private functions definition
-    function over(event) {
-      $('.flexipanda.debug')
-      .css({'background-color': 'red'});
+    function enter (event) {
+      var $this = $(this);
+      while ($this.data('flexiPanda').timers.length > 0) {
+        clearTimeout($this.data('flexiPanda').timers.pop());
+      }
     }
-    function out(event) {
-      $('.flexipanda.debug')
-      .css({'background-color': 'yellow'});
+    function leave (event) {
+      // Bind the clean event trigger to $(this) and pass it to the setTimeout.
+      // The bind is neccessary so that trigger is called the on the correct
+      // pulldown element, rendering this to the correct context.
+      var func = $.proxy($.fn.trigger, $(this), 'clean');
+      $(this).data('flexiPanda').timers.push(setTimeout(func, 2000));
+    }
+    function itemHover (event) {
+      var $this = $(this);
+      $this
+      .siblings('li')
+      .trigger('clean')
+      .end()
+      .addClass('hovered');
+    }
+    function dismiss (event) {
+      event.stopPropagation();
+      $(this).find('.hovered').andSelf().removeClass('hovered');
     }
   
     // private function for debugging
-    function debug() {
+    function debug () {
       var $this = $(this);
       if (window.console && window.console.log) {
         window.console.log('selection count: ' + $this.size());

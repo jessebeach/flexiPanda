@@ -18,16 +18,12 @@
 }
 
 .pulldown ul {
-  display: none; /* Hide sub-menus */
-  left: 0; /* LTR */
+  left: -999em; /* LTR */
   position: absolute;
+  top: 0;
+  visibility: hidden;
   width: 4em;
   z-index: 200;
-}
-
-.pulldown ul {
-  left: 4em; /* LTR */
-  top: 0;
 }
 
 .pulldown li,
@@ -46,12 +42,13 @@
 
 .pulldown li:hover {
   background-color: rgba(0, 255, 255, 0.5);
-  visibility: inherit; /* fixes IE7 'sticky bug' */
   z-index: 51; /* Pull the active trail li's above the other li's */
 }
 
-.pulldown li:hover > ul { /* Enable sub-menus on the main menu */
-  display: block;
+.pulldown li:hover > ul,
+.pulldown .hovered > ul { /* Show the sub-menus */
+  left: 4em;
+  visibility: visible;
 }
 
 .pulldown li + li {
