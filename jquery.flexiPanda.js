@@ -72,14 +72,18 @@
     .trigger('reset')
     .end()
     .trigger('pathSelected')
-    .addClass('fp-trail fp-hovered');
+    .addClass('fp-trail fp-hovered')
+    .closest('ul')
+    .trigger('debug');
   }
   function itemClick(event) {
     event.preventDefault();
     event.stopPropagation();
     $(this)
     .trigger('pathSelected')
-    .addClass('fp-trail fp-clicked');
+    .addClass('fp-trail fp-clicked')
+    .closest('ul')
+    .trigger('debug');
   }
   function setItemData() {
     var $this = $(this);
@@ -120,17 +124,37 @@
         $list = listMaker(data).addClass('fp-data');
     return ($list.children().length > 0) ? $list : $();
   }
+  function setWindowInfo() {
+    var $debugger = getDebugger($('body')),
+        data = {
+          height: $(window).height(),
+          width: $(window).width()
+        };
+    var content = $.proxy(listMaker, this, data);
+    
+    $debugger
+    .html(content())
+    .css({
+      bottom: 60,
+      position: 'absolute',
+      right: 20
+    })
+    .appendTo('body');
+  }
   // private function for debugging
+  function getDebugger($element) {
+    var $debugger = $element.children('.fp-debug').detach();
+    // Make a new debugger or detach the existing one.
+    return (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
+  }
   function debug(event) {
     event.stopPropagation();
     var $this = $(this);
     
     $this.trigger('refresh');
     
-    var $debugger = $this.children('.fp-debug').detach(),
+    var $debugger = getDebugger($this),
         items = $.proxy(renderItemData, this)();
-    // Make a new debugger or detach the existing one.
-    $debugger = (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
     
     if (items.length > 0) {
       $debugger
@@ -168,13 +192,15 @@
         $root
         .bind('reset.flexiPanda', clearClean)
         .bind('clean.flexiPanda', doClean)
-        .bind('debug', (opts.debug) ? debug : false)
+        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .addClass('fp-root')
         .trigger('debug');
         
         $ul
-        .bind('debug', (opts.debug) ? debug : false)
-        .addClass('fp-list');
+        .bind('refresh.flexiPanda', setItemData)
+        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
+        .addClass('fp-list')
+        .trigger('debug');
         
         $li
         .bind('reset.flexiPanda', clearClean)
@@ -182,9 +208,9 @@
         .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
-        .bind('debug', (opts.debug) ? debug : false)
+        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .addClass('fp-item')
-        .trigger('debug');
+        /*.trigger('debug')*/;
         
         // Set up the behavior mode
         switch (o.mode) {
@@ -204,8 +230,15 @@
           break;
         }
         
-        // Create event bindings
-        $(window).bind('resize.flexiPanda', methods.refresh);
+        // Create window bindings
+        $(window)
+        .bind('resize.flexiPanda', setWindowInfo)
+        .trigger('resize');
+        $('html')
+        .css({
+          height: '100%',
+          position: 'relative'
+        });
       });
     },
     destroy : function () {

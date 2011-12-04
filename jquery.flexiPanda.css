@@ -68,9 +68,16 @@
 /* @group Debug */
 
 .fp-debug {
-  background-color: rgb(240, 240, 240);
   border: 1px solid black;
   font-size: 0.8787rem;
+}
+
+li > .fp-debug {
+  background-color: rgb(240, 240, 240);
+}
+
+ul > .fp-debug {
+  background-color: rgb(240, 240, 140);
 }
 
 .fp-debug .fp-data {
