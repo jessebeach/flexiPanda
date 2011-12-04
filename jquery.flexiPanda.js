@@ -123,10 +123,12 @@
   // private function for debugging
   function debug(event) {
     event.stopPropagation();
-    var $this = $(this),
-        $debugger = $this.children('.fp-debug').detach(),
-        items = $.proxy(renderItemData, this)();
+    var $this = $(this);
+    
     $this.trigger('refresh');
+    
+    var $debugger = $this.children('.fp-debug').detach(),
+        items = $.proxy(renderItemData, this)();
     // Make a new debugger or detach the existing one.
     $debugger = (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
     
