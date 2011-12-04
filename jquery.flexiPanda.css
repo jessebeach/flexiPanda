@@ -18,11 +18,11 @@
 }
 
 .pulldown ul {
-  left: -999em; /* LTR */
+  left: 12em; /* LTR */
   position: absolute;
   top: 0;
   visibility: hidden;
-  width: 4em;
+  width: 12em;
   z-index: 200;
 }
 
@@ -46,8 +46,8 @@
 }
 
 .pulldown li:hover > ul,
-.pulldown .hovered > ul { /* Show the sub-menus */
-  left: 4em;
+.pulldown .fp-trail > ul { /* Show the sub-menus */
+  left: 12em;
   visibility: visible;
 }
 
@@ -67,15 +67,22 @@
 
 /* @group Debug */
 
-.flexipanda.debug {
-  background-color: black;
+.fp-debug {
+  background-color: rgb(240, 240, 240);
   border: 1px solid black;
-  height: 200px;
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 200px;
-  z-index: 100;
+  font-size: 0.8787rem;
+}
+
+.fp-debug .fp-data {
+  margin: 0;
+  padding: 3px;
+}
+
+.fp-debug .fp-data::after {
+  content: ".";
+  display: block;
+  height: 0;
+  visibility: hidden;
 }
 
 /* @end */

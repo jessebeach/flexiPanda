@@ -20,10 +20,14 @@
   // Private function definitions
   function clearClean(event) {
     event.stopPropagation();
-    var $this = $(this);
-    while ($this.data(event.data.source).timers.length > 0) {
-      clearTimeout($this.data(event.data.source).timers.pop());
-    };
+    var $this = $(this),
+        timers = $this.data('fp-timers') || [];
+    while (timers.length > 0) {
+      clearTimeout(timers.pop());
+    }
+    $this.data({
+      'fp-timers': []
+    });
   }
   function prepareClean(event) {
     event.stopPropagation();
@@ -31,8 +35,13 @@
     // The bind is neccessary so that trigger is called the on the correct
     // pulldown element, rendering this to the correct context.
     var $this = $(this),
-        func = $.proxy($.fn.trigger, $this, 'clean');
-    $this.data(event.data.source).timers.push(setTimeout(func, event.data.delay));
+        func = $.proxy($.fn.trigger, $(this), 'clean'),
+        timeout = setTimeout(func, event.data.delay),
+        timers = $this.data('fp-timers') || [];
+    timers.push(timeout);
+    $this.data({
+      'fp-timers': timers
+    });
     $this.trigger('debug');
   }
   function doClean(event) {
@@ -40,7 +49,9 @@
     var $this = $(this);
     $this
     .find('.fp-hovered').andSelf()
-    .removeClass('fp-trail fp-hovered fp-clicked');
+    .removeClass('fp-trail fp-hovered fp-clicked')
+    .trigger('reset')
+    .trigger('debug');
   }
   function establishPath(event) {
     event.stopPropagation();
@@ -70,9 +81,9 @@
     .trigger('pathSelected')
     .addClass('fp-trail fp-clicked');
   }
-  function setItemData(source) {
+  function setItemData() {
     var $this = $(this);
-    $this.data(source, {
+    $this.data('fp-dimensions', {
       width: $this.width(),
       height: $this.height(),
       left: $this.css('left'),
@@ -93,7 +104,7 @@
         }
         else {
           $item.append($('<b>', {
-            text: '[' + typeof(data[datum]) + ']' + data[datum]
+            text: '[' + typeof(data[datum]) + '] ' + data[datum]
           }));
         }
         $item.appendTo($list);
@@ -103,9 +114,9 @@
       text: 'null'
     });
   }
-  function renderItemData(source) {
+  function renderItemData() {
     var $this = $(this),
-        data = $this.data(source),
+        data = $this.data(),
         $list = listMaker(data).addClass('fp-data');
     return ($list.children().length > 0) ? $list : $();
   }
@@ -113,16 +124,19 @@
   function debug(event) {
     event.stopPropagation();
     var $this = $(this),
-        $debugger = $('.fp-debug', $this).detach(),
-        data = $this.data(event.data.source),
-        items = $.proxy(renderItemData, this, event.data.source)();
-    // $this.trigger('refresh');
+        $debugger = $this.children('.fp-debug').detach(),
+        items = $.proxy(renderItemData, this)();
+    $this.trigger('refresh');
     // Make a new debugger or detach the existing one.
     $debugger = (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
     
     if (items.length > 0) {
       $debugger
       .html(items)
+      .css({
+        left: 50,
+        position: 'absolute'
+      })
       .appendTo($this);
     }
   }
@@ -150,26 +164,23 @@
         var $li = $root.find('li');
         // Basic setup
         $root
-        .bind('reset.flexiPanda', {source: o.dataIndex}, clearClean)
+        .bind('reset.flexiPanda', clearClean)
         .bind('clean.flexiPanda', doClean)
-        .bind('debug', {source: o.dataIndex}, (opts.debug) ? debug : false)
+        .bind('debug', (opts.debug) ? debug : false)
         .addClass('fp-root')
         .trigger('debug');
         
         $ul
-        .bind('debug', {source: o.dataIndex}, (opts.debug) ? debug : false)
+        .bind('debug', (opts.debug) ? debug : false)
         .addClass('fp-list');
         
         $li
-        .data(o.dataIndex, {
-          timers : []
-        })
-        .bind('reset.flexiPanda', {source: o.dataIndex}, clearClean)
-        .bind('refresh.flexiPanda', {source: o.dataIndex}, setItemData)
-        .bind('activated.flexiPanda', {delay: o.delays.items, source: o.dataIndex}, prepareClean)
+        .bind('reset.flexiPanda', clearClean)
+        .bind('refresh.flexiPanda', setItemData)
+        .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
-        .bind('debug', {source: o.dataIndex}, (opts.debug) ? debug : false)
+        .bind('debug', (opts.debug) ? debug : false)
         .addClass('fp-item')
         .trigger('debug');
         
@@ -183,11 +194,11 @@
         case 'hover' :
           // Hover mode
           $root
-          .bind('mouseenter.flexiPanda.hoverMode', {source: o.dataIndex}, clearClean)
-          .bind('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu, source: o.dataIndex}, prepareClean);
+          .bind('mouseenter.flexiPanda.hoverMode', clearClean)
+          .bind('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu}, prepareClean);
         
           $li
-          .bind('mouseover.flexiPanda.hoverMode', itemHover);
+          .bind('mouseenter.flexiPanda.hoverMode', itemHover);
           break;
         }
         
