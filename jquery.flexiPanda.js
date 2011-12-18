@@ -140,52 +140,42 @@
     $this.offset(coords);
   }
   function reposition(event) {
-    var $this = $(this),
-    offset = $this.offset(),
-    width = $this.outerWidth(false),
-    height = $this.outerHeight(false),
-    client = {
-      left: document.documentElement.clientLeft,
-      top: document.documentElement.clientTop,
-      height: document.documentElement.clientHeight,
-      width: document.documentElement.clientWidth
-    },
-    props = {
-      height: height,
-      width: width,
-      // These dimensions are calculated as distance from the respective
-      // edge of the viewport, not as distance from the left/top origin.
-      // This allows us to know if an item is out of bounds if the
-      // distance is negative.
-      left: (client.left + offset.left),
-      top: (client.top + offset.top),
-      right: (client.width - (offset.left + width)),
-      bottom: (client.height - (offset.top + height))
-    };
-    // Check if the item falls within the bounds of the viewport within the
-    // configured tolerance.
-    props.bounds = checkOutOfBounds(props, event.data.edge.tolerance);
-    // Move the item if it is out of bounds
-    var edge = '';
-    for (edge in props.bounds) {
-      if (props.bounds.hasOwnProperty(edge)) {
-        if (!props.bounds[edge]) {
-          if (props[edge] < 0) {
-            move.call(this, getVector(edge, props[edge], event.data.edge));
+    event.stopPropagation();
+    var $this = $(this);
+    if ($this.is('ul')) {
+      var dimensions = $this.data('fp-dimensions');
+      // Check if the item falls within the bounds of the viewport within the
+      // configured tolerance.
+      var bounds = checkOutOfBounds(dimensions, event.data.edge.tolerance);
+      // Move the item if it is out of bounds
+      var edge = '';
+      for (edge in bounds) {
+        if (bounds.hasOwnProperty(edge)) {
+          if (!bounds[edge]) {
+            if (dimensions[edge] < 0) {
+              move.call(this, getVector(edge, dimensions[edge], event.data.edge));
+            }
           }
         }
       }
     }
   }
   function setItemData(event) {
+    event.stopPropagation();
     var $this = $(this),
     offset = $this.offset(),
     height = $this.outerHeight(false),
     width = $this.outerWidth(false),
     client = {
+      left: document.documentElement.clientLeft,
+      top: document.documentElement.clientTop,
       height: document.documentElement.clientHeight,
       width: document.documentElement.clientWidth
     };
+    // These dimensions are calculated as distance from the respective
+    // edge of the viewport, not as distance from the left/top origin.
+    // This allows us to know if an item is out of bounds if the
+    // distance is negative.
     $this.data('fp-dimensions', {
       width: width,
       height: height,
@@ -310,9 +300,9 @@
         .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
-        /*.bind('debug.flexiPanda', (opts.debug) ? debug : false)*/
+        /* .bind('debug.flexiPanda', (opts.debug) ? debug : false) */
         .addClass('fp-item')
-        .trigger('refresh')
+        /*.trigger('refresh')*/
         .trigger('debug');
         
         // Set up the behavior mode
