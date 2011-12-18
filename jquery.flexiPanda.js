@@ -84,54 +84,14 @@
     .closest('ul')
     .trigger('debug');
   }
-  function setItemData(event) {
-    var $this = $(this),
-        offset = $this.offset(),
-        width = $this.outerWidth(false),
-        height = $this.outerHeight(false),
-        client = {
-          left: document.documentElement.clientLeft,
-          top: document.documentElement.clientTop,
-          height: document.documentElement.clientHeight,
-          width: document.documentElement.clientWidth
-        },
-        props = {
-          height: height,
-          width: width,
-          // These dimensions are calculated as distance from the respective
-          // edge of the viewport, not as distance from the left/top origin.
-          // This allows us to know if an item is out of bounds if the
-          // distance is negative.
-          left: (client.left + offset.left),
-          top: (client.top + offset.top),
-          right: (client.width - (offset.left + width)),
-          bottom: (client.height - (offset.top + height))
-        };
-    // Check if the item falls within the bounds of the viewport within the
-    // configured tolerance.
-    props.bounds = checkOutOfBounds(props, event.data.edge.tolerance);
-    // Move the item if it is out of bounds
-    var edge = '';
-    for (edge in props.bounds) {
-      var vectors = {};
-      if (props.bounds.hasOwnProperty(edge)) {
-        if (!props.bounds[edge]) {
-          if (props[edge] < 0) {
-            vectors = getVector(edge, props[edge], event.data.edge);
-            move.call(this, vectors);
-          }
-        }
-      }
-    }
-    $this.data('fp-dimensions', {
-      width: $this.outerWidth(false),
-      height: $this.outerHeight(false),
-      left: $this.offset().left,
-      top: $this.offset().top,
-      right: (client.width - ($this.offset().left + $this.outerWidth(false))),
-      bottom: (client.height - ($this.offset().top + $this.outerHeight(false))),
-      bounds: props.bounds
-    });
+  function checkOutOfBounds(dimensions, tolerance) {
+    tolerance = (tolerance) ? tolerance : 0;
+    return {
+      left: (dimensions.left >= tolerance),
+      top: (dimensions.top >= tolerance),
+      right: (dimensions.right >= tolerance),
+      bottom: (dimensions.bottom >= tolerance)
+    };
   }
   /**
    * Return a vector for a move based on the edge and the distance outside the edge.
@@ -179,14 +139,62 @@
     // Move the item.
     $this.offset(coords);
   }
-  function checkOutOfBounds(dimensions, tolerance) {
-    tolerance = (tolerance) ? tolerance : 0;
-    return {
-      left: (dimensions.left >= tolerance),
-      top: (dimensions.top >= tolerance),
-      right: (dimensions.right >= tolerance),
-      bottom: (dimensions.bottom >= tolerance)
+  function reposition(event) {
+    var $this = $(this),
+    offset = $this.offset(),
+    width = $this.outerWidth(false),
+    height = $this.outerHeight(false),
+    client = {
+      left: document.documentElement.clientLeft,
+      top: document.documentElement.clientTop,
+      height: document.documentElement.clientHeight,
+      width: document.documentElement.clientWidth
+    },
+    props = {
+      height: height,
+      width: width,
+      // These dimensions are calculated as distance from the respective
+      // edge of the viewport, not as distance from the left/top origin.
+      // This allows us to know if an item is out of bounds if the
+      // distance is negative.
+      left: (client.left + offset.left),
+      top: (client.top + offset.top),
+      right: (client.width - (offset.left + width)),
+      bottom: (client.height - (offset.top + height))
     };
+    // Check if the item falls within the bounds of the viewport within the
+    // configured tolerance.
+    props.bounds = checkOutOfBounds(props, event.data.edge.tolerance);
+    // Move the item if it is out of bounds
+    var edge = '';
+    for (edge in props.bounds) {
+      if (props.bounds.hasOwnProperty(edge)) {
+        if (!props.bounds[edge]) {
+          if (props[edge] < 0) {
+            move.call(this, getVector(edge, props[edge], event.data.edge));
+          }
+        }
+      }
+    }
+  }
+  function setItemData(event) {
+    var $this = $(this),
+    offset = $this.offset(),
+    height = $this.outerHeight(false),
+    width = $this.outerWidth(false),
+    client = {
+      height: document.documentElement.clientHeight,
+      width: document.documentElement.clientWidth
+    };
+    $this.data('fp-dimensions', {
+      width: width,
+      height: height,
+      left: offset.left,
+      top: offset.top,
+      right: (client.width - (offset.left + width)),
+      bottom: (client.height - (offset.top + height))
+    });
+    $this.trigger('updated');
   }
   function listMaker(data) {
     var $list = $('<div>');
@@ -218,12 +226,18 @@
         $list = listMaker(data).addClass('fp-data');
     return ($list.children().length > 0) ? $list : $();
   }
+  // private function for debugging
+  function getDebugger($element) {
+    var $debugger = $element.children('.fp-debug').detach();
+    // Make a new debugger or detach the existing one.
+    return (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
+  }
   function setWindowInfo() {
     var $debugger = getDebugger($('body')),
-        data = {
-          height: document.documentElement.clientHeight,
-          width: document.documentElement.clientWidth
-        };
+    data = {
+      height: document.documentElement.clientHeight,
+      width: document.documentElement.clientWidth
+    };
     var content = $.proxy(listMaker, this, data);
     
     $debugger
@@ -234,12 +248,6 @@
       right: 20
     })
     .appendTo('body');
-  }
-  // private function for debugging
-  function getDebugger($element) {
-    var $debugger = $element.children('.fp-debug').detach();
-    // Make a new debugger or detach the existing one.
-    return (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
   }
   function debug(event) {
     event.stopPropagation();
@@ -289,7 +297,8 @@
         .trigger('debug');
         
         $ul
-        .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData)
+        .bind('refresh.flexiPanda', setItemData)
+        .bind('updated.flexiPanda', {edge: opts.edge}, reposition)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .addClass('fp-list')
         .trigger('refresh')
@@ -297,13 +306,14 @@
         
         $li
         .bind('reset.flexiPanda', clearClean)
-        /* .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData) */
+        .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData)
         .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
         /*.bind('debug.flexiPanda', (opts.debug) ? debug : false)*/
         .addClass('fp-item')
-        /*.trigger('debug')*/;
+        .trigger('refresh')
+        .trigger('debug');
         
         // Set up the behavior mode
         switch (o.mode) {
