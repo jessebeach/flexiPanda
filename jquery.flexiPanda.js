@@ -1,6 +1,6 @@
 /*jslint bitwise: true, eqeqeq: true, immed: true, newcap: true, nomen: false,
  onevar: false, plusplus: false, regexp: true, undef: true, white: true, indent: 2
- browser: true devel: false */
+ browser: true */
  
 /*global jQuery: true debug: true window: true */
 
@@ -13,7 +13,6 @@
  * Author URI: http://qemist.us
  * Author Twitter: @jessebeach
  * Author Github: https://github.com/jessebeach
- *
  */
 
 (function ($) {    
@@ -85,14 +84,109 @@
     .closest('ul')
     .trigger('debug');
   }
-  function setItemData() {
-    var $this = $(this);
+  function setItemData(event) {
+    var $this = $(this),
+        offset = $this.offset(),
+        width = $this.outerWidth(false),
+        height = $this.outerHeight(false),
+        client = {
+          left: document.documentElement.clientLeft,
+          top: document.documentElement.clientTop,
+          height: document.documentElement.clientHeight,
+          width: document.documentElement.clientWidth
+        },
+        props = {
+          height: height,
+          width: width,
+          // These dimensions are calculated as distance from the respective
+          // edge of the viewport, not as distance from the left/top origin.
+          // This allows us to know if an item is out of bounds if the
+          // distance is negative.
+          left: (client.left + offset.left),
+          top: (client.top + offset.top),
+          right: (client.width - (offset.left + width)),
+          bottom: (client.height - (offset.top + height))
+        };
+    // Check if the item falls within the bounds of the viewport within the
+    // configured tolerance.
+    props.bounds = checkOutOfBounds(props, event.data.edge.tolerance);
+    // Move the item if it is out of bounds
+    var edge = '';
+    for (edge in props.bounds) {
+      var vectors = {};
+      if (props.bounds.hasOwnProperty(edge)) {
+        if (!props.bounds[edge]) {
+          if (props[edge] < 0) {
+            vectors = getVector(edge, props[edge], event.data.edge);
+            move.call(this, vectors);
+          }
+        }
+      }
+    }
     $this.data('fp-dimensions', {
-      width: $this.width(),
-      height: $this.height(),
-      left: $this.css('left'),
-      right: $this.css('right')
+      width: $this.outerWidth(false),
+      height: $this.outerHeight(false),
+      left: $this.offset().left,
+      top: $this.offset().top,
+      right: (client.width - ($this.offset().left + $this.outerWidth(false))),
+      bottom: (client.height - ($this.offset().top + $this.outerHeight(false))),
+      bounds: props.bounds
     });
+  }
+  /**
+   * Return a vector for a move based on the edge and the distance outside the edge.
+   */
+  function getVector(edge, outside, collision) {
+    var tolerance = (collision.tolerance) ? collision.tolerance : 0,
+        buffer = (collision.buffer) ? collision.buffer : 0;
+    
+    var vectors = {
+      horizontal: null,
+      vertical: null
+    };
+    // Moves are made from the top/left origin. So the direction is up or left.
+    switch (edge) {
+    case 'left' :
+      vectors.horizontal = (Math.abs(outside) + buffer);
+      break;
+    case 'right' :
+      vectors.horizontal = (outside - buffer);
+      break;
+    case 'top' :
+      vectors.vertical = (Math.abs(outside) + buffer);
+      break;
+    case 'bottom' :
+      vectors.vertical = (outside - buffer);
+      break;
+    default :
+      break;
+    }
+    return vectors;
+  }
+  /**
+   * param vectors {object}
+   */
+  function move(vectors) {
+    var $this = $(this),
+        offset = $this.offset(),
+        coords = {};
+    if (vectors.horizontal) {
+      coords.left = (offset.left + vectors.horizontal);
+    }
+    if (vectors.vertical) {
+      coords.top = (offset.top + vectors.vertical);
+    }
+    // Move the item.
+    $this.offset(coords);
+  }
+  function checkOutOfBounds(dimensions, tolerance) {
+    tolerance = (tolerance) ? tolerance : 0;
+    return {
+      left: (dimensions.left >= tolerance),
+      top: (dimensions.top >= tolerance),
+      right: (dimensions.right >= tolerance),
+      bottom: (dimensions.bottom >= tolerance)
+    };
   }
   function listMaker(data) {
     var $list = $('<div>');
@@ -127,8 +221,8 @@
   function setWindowInfo() {
     var $debugger = getDebugger($('body')),
         data = {
-          height: $(window).height(),
-          width: $(window).width()
+          height: document.documentElement.clientHeight,
+          width: document.documentElement.clientWidth
         };
     var content = $.proxy(listMaker, this, data);
     
@@ -150,8 +244,6 @@
   function debug(event) {
     event.stopPropagation();
     var $this = $(this);
-    
-    $this.trigger('refresh');
     
     var $debugger = getDebugger($this),
         items = $.proxy(renderItemData, this)();
@@ -197,18 +289,19 @@
         .trigger('debug');
         
         $ul
-        .bind('refresh.flexiPanda', setItemData)
+        .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .addClass('fp-list')
+        .trigger('refresh')
         .trigger('debug');
         
         $li
         .bind('reset.flexiPanda', clearClean)
-        .bind('refresh.flexiPanda', setItemData)
+        /* .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData) */
         .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
-        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
+        /*.bind('debug.flexiPanda', (opts.debug) ? debug : false)*/
         .addClass('fp-item')
         /*.trigger('debug')*/;
         
@@ -269,7 +362,11 @@
     },
     mode: 'hover',
     debug: false,
-    dataIndex: 'flexiPanda'
+    dataIndex: 'flexiPanda',
+    edge: {
+      tolerance: 10,
+      buffer: 10
+    }
   };
 }
 // Pass jQuery as the param to the preceding anonymous function
