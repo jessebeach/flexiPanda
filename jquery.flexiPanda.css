@@ -41,7 +41,6 @@
 }
 
 .pulldown li:hover {
-  background-color: rgba(0, 255, 255, 0.5);
   z-index: 51; /* Pull the active trail li's above the other li's */
 }
 
@@ -65,11 +64,24 @@
 
 /* @end */
 
+/* @group Appearance */
+
+.fp-root li:hover,
+.fp-root .fp-trail {
+  background-color: rgba(0, 255, 255, 0.5);
+}
+
+/* @end */
+
 /* @group Debug */
 
 .fp-debug {
   border: 1px solid black;
   font-size: 0.8787rem;
+}
+
+.fp-debug div div {
+  margin-left: 4px;
 }
 
 li > .fp-debug {
