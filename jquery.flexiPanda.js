@@ -19,27 +19,23 @@
   // Private function definitions
   function clearClean(event) {
     event.stopPropagation();
-    $(this).each(function(index, element) {
-      var $this = $(this);
-      var timers = $this.data().flexiPanda.timers;
-      while (timers.length > 0) {
-        clearTimeout(timers.pop());
-      }
-    });
+    var $this = $(this);
+    var timers = $this.data().flexiPanda.timers;
+    while (timers.length > 0) {
+      clearTimeout(timers.pop());
+    }
   }
   function prepareClean(event) {
     event.stopPropagation();
     // Bind the clean event trigger to $(this) and pass it to the setTimeout.
     // The bind is necessary so that trigger is called on the correct
     // pulldown element, rendering 'this' to the correct context.
-    $(this).each(function(index, element) {
-      var $this = $(this),
-          func = $.proxy($.fn.trigger, $(this), 'clean'),
-          timeout = setTimeout(func, event.data.delay),
-          timers = $this.data().flexiPanda.timers;
-      timers.push(timeout);
-      $this.trigger('debug');
-    });
+    var $this = $(this),
+        func = $.proxy($.fn.trigger, $(this), 'clean'),
+        timeout = setTimeout(func, event.data.delay),
+        timers = $this.data().flexiPanda.timers;
+    timers.push(timeout);
+    $this.trigger('debug');
   }
   function doClean(event) {
     event.stopPropagation();
@@ -86,7 +82,7 @@
   function markListLevels($elements, level) {
     $elements
     .addClass('fp-level-' + level)
-    .each(function(index, element){
+    .each(function (index, element) {
       $(this).data().flexiPanda.level = level;
     });
     var $lists = $elements.children('li').children('ul');
@@ -150,57 +146,53 @@
   }
   function reposition(event) {
     event.stopPropagation();
-    $(this).each(function(index, element){
-      var $this = $(this);
-      if ($this.is('ul')) {
-        var dimensions = $this.data().flexiPanda.dimensions;
-        $this.data().flexiPanda.processed += 1;
-        // Check if the item falls within the bounds of the viewport within the
-        // configured tolerance.
-        var bounds = checkOutOfBounds(dimensions, event.data.edge.tolerance);
-        // Move the item if it is out of bounds
-        var edge = '';
-        for (edge in bounds) {
-          if (bounds.hasOwnProperty(edge)) {
-            if (!bounds[edge]) {
-              if (dimensions[edge] < 0) {
-                move.call(this, getVector(edge, dimensions[edge], event.data.edge));
-              }
+    var $this = $(this);
+    if ($this.is('ul')) {
+      var dimensions = $this.data().flexiPanda.dimensions;
+      $this.data().flexiPanda.processed += 1;
+      // Check if the item falls within the bounds of the viewport within the
+      // configured tolerance.
+      var bounds = checkOutOfBounds(dimensions, event.data.edge.tolerance);
+      // Move the item if it is out of bounds
+      var edge = '';
+      for (edge in bounds) {
+        if (bounds.hasOwnProperty(edge)) {
+          if (!bounds[edge]) {
+            if (dimensions[edge] < 0) {
+              move.call(this, getVector(edge, dimensions[edge], event.data.edge));
             }
           }
         }
       }
-      // Trigger refresh on the child lists.
-      var level = $this.data().flexiPanda.level + 1;
-      $('.fp-level-' + level).trigger('refresh');
-    });
+    }
+    // Trigger refresh on the child lists.
+    var level = $this.data().flexiPanda.level + 1;
+    $('.fp-level-' + level).trigger('refresh');
   }
   function setItemData(event) {
     event.stopPropagation();
-    $(this).each(function(index, element){
-      var $this = $(this),
-      offset = $this.offset(),
-      height = $this.outerHeight(false),
-      width = $this.outerWidth(false),
-      client = {
-        left: document.documentElement.clientLeft,
-        top: document.documentElement.clientTop,
-        height: document.documentElement.clientHeight,
-        width: document.documentElement.clientWidth
-      };
-      // These dimensions are calculated as distance from the respective
-      // edge of the viewport, not as distance from the left/top origin.
-      // This allows us to know if an item is out of bounds if the
-      // distance is negative.
-      $this.data().flexiPanda.dimensions = {
-        width: width,
-        height: height,
-        left: offset.left,
-        top: offset.top,
-        right: (client.width - (offset.left + width)),
-        bottom: (client.height - (offset.top + height))
-      };
-    });
+    var $this = $(this),
+    offset = $this.offset(),
+    height = $this.outerHeight(false),
+    width = $this.outerWidth(false),
+    client = {
+      left: document.documentElement.clientLeft,
+      top: document.documentElement.clientTop,
+      height: document.documentElement.clientHeight,
+      width: document.documentElement.clientWidth
+    };
+    // These dimensions are calculated as distance from the respective
+    // edge of the viewport, not as distance from the left/top origin.
+    // This allows us to know if an item is out of bounds if the
+    // distance is negative.
+    $this.data().flexiPanda.dimensions = {
+      width: width,
+      height: height,
+      left: offset.left,
+      top: offset.top,
+      right: (client.width - (offset.left + width)),
+      bottom: (client.height - (offset.top + height))
+    };
   }
   function listMaker(data) {
     var $list = $('<div>');
@@ -257,22 +249,20 @@
   }
   function debug(event) {
     event.stopPropagation();
-    $(this).each(function(index, element) {
-      var $this = $(this);
-      
-      var $debugger = getDebugger($this),
-          items = $.proxy(renderItemData, this)();
-      
-      if (items.length > 0) {
-        $debugger
-        .html(items)
-        .css({
-          left: 50,
-          position: 'absolute'
-        })
-        .appendTo($this);
-      }
-    });
+    var $this = $(this);
+    
+    var $debugger = getDebugger($this),
+        items = $.proxy(renderItemData, this)();
+    
+    if (items.length > 0) {
+      $debugger
+      .html(items)
+      .css({
+        left: 50,
+        position: 'absolute'
+      })
+      .appendTo($this);
+    }
   }
   var methods = {
     init : function (options) {
@@ -309,7 +299,7 @@
         
         $ul
         .addClass('fp-list')
-        .each(function(index, element) {
+        .each(function (index, element) {
           $(this).data('flexiPanda', {
             timers: [],
             processed: 0
@@ -324,7 +314,7 @@
         
         $li
         .addClass('fp-item')
-        .each(function(index, element) {
+        .each(function (index, element) {
           $(this).data('flexiPanda', {
             timers: []
           });
@@ -334,9 +324,9 @@
         .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
-        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
+        /*.bind('debug.flexiPanda', (opts.debug) ? debug : false)*/
         .trigger('refresh')
-        .trigger('debug');
+        /*.trigger('debug')*/;
         
         // Indicate the level of each menu.
         markListLevels($root, 0);
