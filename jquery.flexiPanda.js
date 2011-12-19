@@ -19,29 +19,27 @@
   // Private function definitions
   function clearClean(event) {
     event.stopPropagation();
-    var $this = $(this),
-        timers = $this.data('fp-timers') || [];
-    while (timers.length > 0) {
-      clearTimeout(timers.pop());
-    }
-    $this.data({
-      'fp-timers': []
+    $(this).each(function(index, element) {
+      var $this = $(this);
+      var timers = $this.data().flexiPanda.timers;
+      while (timers.length > 0) {
+        clearTimeout(timers.pop());
+      }
     });
   }
   function prepareClean(event) {
     event.stopPropagation();
     // Bind the clean event trigger to $(this) and pass it to the setTimeout.
-    // The bind is neccessary so that trigger is called the on the correct
-    // pulldown element, rendering this to the correct context.
-    var $this = $(this),
-        func = $.proxy($.fn.trigger, $(this), 'clean'),
-        timeout = setTimeout(func, event.data.delay),
-        timers = $this.data('fp-timers') || [];
-    timers.push(timeout);
-    $this.data({
-      'fp-timers': timers
+    // The bind is necessary so that trigger is called on the correct
+    // pulldown element, rendering 'this' to the correct context.
+    $(this).each(function(index, element) {
+      var $this = $(this),
+          func = $.proxy($.fn.trigger, $(this), 'clean'),
+          timeout = setTimeout(func, event.data.delay),
+          timers = $this.data().flexiPanda.timers;
+      timers.push(timeout);
+      $this.trigger('debug');
     });
-    $this.trigger('debug');
   }
   function doClean(event) {
     event.stopPropagation();
@@ -83,6 +81,18 @@
     .addClass('fp-trail fp-clicked')
     .closest('ul')
     .trigger('debug');
+  }
+  
+  function markListLevels($elements, level) {
+    $elements
+    .addClass('fp-level-' + level)
+    .each(function(index, element){
+      $(this).data().flexiPanda.level = level;
+    });
+    var $lists = $elements.children('li').children('ul');
+    if ($lists.length > 0) {
+      markListLevels($lists, (level + 1));
+    }
   }
   function checkOutOfBounds(dimensions, tolerance) {
     tolerance = (tolerance) ? tolerance : 0;
@@ -143,7 +153,7 @@
     event.stopPropagation();
     var $this = $(this);
     if ($this.is('ul')) {
-      var dimensions = $this.data('fp-dimensions');
+      var dimensions = $this.data().flexiPanda.dimensions;
       // Check if the item falls within the bounds of the viewport within the
       // configured tolerance.
       var bounds = checkOutOfBounds(dimensions, event.data.edge.tolerance);
@@ -159,6 +169,9 @@
         }
       }
     }
+    // Trigger refresh on the child lists.
+    var level = $this.data().flexiPanda.level + 1;
+    $('.fp-level-' + level).trigger('refresh');
   }
   function setItemData(event) {
     event.stopPropagation();
@@ -176,14 +189,14 @@
     // edge of the viewport, not as distance from the left/top origin.
     // This allows us to know if an item is out of bounds if the
     // distance is negative.
-    $this.data('fp-dimensions', {
+    $this.data().flexiPanda.dimensions = {
       width: width,
       height: height,
       left: offset.left,
       top: offset.top,
       right: (client.width - (offset.left + width)),
       bottom: (client.height - (offset.top + height))
-    });
+    };
     $this.trigger('updated');
   }
   function listMaker(data) {
@@ -212,7 +225,7 @@
   }
   function renderItemData() {
     var $this = $(this),
-        data = $this.data(),
+        data = $this.data().flexiPanda,
         $list = listMaker(data).addClass('fp-data');
     return ($list.children().length > 0) ? $list : $();
   }
@@ -276,34 +289,51 @@
             debug: o.debug
           }); 
         }
+        
         var $ul = $root.find('ul');
         var $li = $root.find('li');
         // Basic setup
         $root
+        .addClass('fp-root')
         .bind('reset.flexiPanda', clearClean)
         .bind('clean.flexiPanda', doClean)
-        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
-        .addClass('fp-root')
-        .trigger('debug');
-        
-        $ul
         .bind('refresh.flexiPanda', setItemData)
         .bind('updated.flexiPanda', {edge: opts.edge}, reposition)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
+        .trigger('refresh')
+        .trigger('debug');
+        
+        $ul
         .addClass('fp-list')
+        .each(function(index, element) {
+          $(this).data('flexiPanda', {
+            timers: []
+          });
+        })
+        .bind('refresh.flexiPanda', setItemData)
+        .bind('updated.flexiPanda', {edge: opts.edge}, reposition)
+        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .trigger('refresh')
         .trigger('debug');
         
         $li
+        .addClass('fp-item')
+        .each(function(index, element) {
+          $(this).data('flexiPanda', {
+            timers: []
+          });
+        })
         .bind('reset.flexiPanda', clearClean)
         .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData)
         .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
-        /* .bind('debug.flexiPanda', (opts.debug) ? debug : false) */
-        .addClass('fp-item')
+        /*.bind('debug.flexiPanda', (opts.debug) ? debug : false)*/
         /*.trigger('refresh')*/
         .trigger('debug');
+        
+        // Indicate the level of each menu.
+        markListLevels($root, 0);
         
         // Set up the behavior mode
         switch (o.mode) {
