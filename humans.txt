@@ -1,0 +1,12 @@
+/* TEAM */
+	Lead: Jesse Beach
+	Contact: jesse [at] qemistry.us
+	Twitter: @jessebeach
+	From: Cambridge, MA
+		
+
+/* SITE */
+	Last update: 2011/012/26
+	Language: English
+	Doctype: HTML5
+	IDE: Espresso, Netbeans, Chrome
