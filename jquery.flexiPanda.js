@@ -316,7 +316,8 @@
         .addClass('fp-item')
         .each(function (index, element) {
           $(this).data('flexiPanda', {
-            timers: []
+            timers: [],
+            processed: 0
           });
         })
         .bind('reset.flexiPanda', clearClean)
@@ -324,9 +325,9 @@
         .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
-        /*.bind('debug.flexiPanda', (opts.debug) ? debug : false)*/
+        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .trigger('refresh')
-        /*.trigger('debug')*/;
+        .trigger('debug');
         
         // Indicate the level of each menu.
         markListLevels($root, 0);
