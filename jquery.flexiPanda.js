@@ -17,7 +17,7 @@
 
 (function ($) {    
   // Private function definitions
-  function clearClean(event) {
+  function clearDelay(event) {
     event.stopPropagation();
     var $this = $(this);
     var timers = $this.data().flexiPanda.timers;
@@ -25,7 +25,7 @@
       clearTimeout(timers.pop());
     }
   }
-  function prepareClean(event) {
+  function setDelay(event) {
     event.stopPropagation();
     // Bind the function designated in event.data.toTrigger
     // to $(this) and pass it to the setTimeout.
@@ -292,7 +292,7 @@
         // Basic setup
         $root
         .addClass('fp-root')
-        .bind('reset.flexiPanda', clearClean)
+        .bind('reset.flexiPanda', clearDelay)
         .bind('clean.flexiPanda', doClean)
         .bind('refresh.flexiPanda', setItemData)
         .bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
@@ -309,7 +309,6 @@
           });
         })
         .bind('refresh.flexiPanda', setItemData)
-        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .trigger('debug');
@@ -322,9 +321,9 @@
             processed: 0
           });
         })
-        .bind('reset.flexiPanda', clearClean)
+        .bind('reset.flexiPanda', clearDelay)
         .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData)
-        .bind('activated.flexiPanda', {delay: o.delays.items}, prepareClean)
+        .bind('activated.flexiPanda', {delay: o.delays.items}, setDelay)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
@@ -349,8 +348,8 @@
         case 'hover' :
           // Hover mode
           $root
-          .bind('mouseenter.flexiPanda.hoverMode', clearClean)
-          .bind('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu}, prepareClean);
+          .bind('mouseenter.flexiPanda.hoverMode', clearDelay)
+          .bind('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu}, setDelay);
         
           $li
           .bind('mouseenter.flexiPanda.hoverMode', itemHover);
