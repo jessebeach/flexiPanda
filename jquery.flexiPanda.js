@@ -281,6 +281,7 @@
         .bind('clean.flexiPanda', doClean)
         .bind('refresh.flexiPanda', setItemData)
         .bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
+        .bind('mouseleave.flexiPanda', {delay: 100, toTrigger: 'rebounded'}, setDelay)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .trigger('refresh')
         .trigger('debug');
