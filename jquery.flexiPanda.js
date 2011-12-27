@@ -152,14 +152,13 @@
   }
   function reposition(event) {
     event.stopPropagation();
-    var $this = $(this);
-    var dimensions = $this.trigger('refresh').data().flexiPanda.dimensions;
-    $this.data().flexiPanda.processed += 1;
-    // Check if the item falls within the bounds of the viewport within the
-    // configured tolerance.
-    var bounds = checkOutOfBounds(dimensions, event.data.edge.tolerance);
+    var $this = $(this),
+    		dimensions = $this.trigger('refresh').data().flexiPanda.dimensions,
+		    // Check if the item falls within the bounds of the viewport within the
+		    // configured tolerance.
+    		bounds = checkOutOfBounds(dimensions.item, event.data.edge.tolerance),		
+    		edge = '';
     // Move the item if it is out of bounds
-    var edge = '';
     for (edge in bounds) {
       if (bounds.hasOwnProperty(edge)) {
       	// The bounds array contains a property for each edge. If the edge
@@ -179,6 +178,9 @@
   function setItemData(event) {
     event.stopPropagation();
     var $this = $(this),
+    data = $this.data().flexiPanda,
+    $parentItem = $this.closest('.fp-item'),
+ 		$parentList = $this.closest('.fp-list'),
     offset = $this.offset(),
     height = $this.outerHeight(false),
     width = $this.outerWidth(false),
@@ -188,11 +190,12 @@
       height: document.documentElement.clientHeight,
       width: document.documentElement.clientWidth
     };
+    data.dimensions = {};
     // These dimensions are calculated as distance from the respective
     // edge of the viewport, not as distance from the left/top origin.
     // This allows us to know if an item is out of bounds if the
     // distance is negative.
-    $this.data().flexiPanda.dimensions = {
+    data.dimensions.item = {
       width: width,
       height: height,
       left: offset.left,
@@ -200,6 +203,30 @@
       right: (client.width - (offset.left + width)),
       bottom: (client.height - (offset.top + height))
     };
+    // Get the dimensions of the parent item
+    if ($parentItem.length > 0) {
+    	var position = $parentItem.position(),
+    	width = $parentItem.width(),
+    	height = $parentItem.height();
+	    data.dimensions.parentItem = {
+		  	width: width,
+		  	height: height,
+		  	top: position.top,
+		  	bottom: (position.top + height)
+	    };
+	  }
+	  // Get the dimensions of the parent list
+	  if ($parentList.length > 0) {
+    	var position = $parentList.position(),
+    	width = $parentList.width(),
+    	height = $parentList.height();
+	    data.dimensions.parentList = {
+		  	width: width,
+		  	height: height,
+		  	top: position.top,
+		  	bottom: (position.top + height)
+	    };
+	  }
   }
   function listMaker(data) {
     var $list = $('<div>');
