@@ -67,6 +67,9 @@
     .closest('.fp-root')
     .trigger('reset')
     .end()
+    .closest('ul')
+    .trigger('rebounded')
+    .end()
     .trigger('pathSelected')
     .addClass('fp-trail fp-hovered')
     .closest('ul')
@@ -281,7 +284,7 @@
         .bind('clean.flexiPanda', doClean)
         .bind('refresh.flexiPanda', setItemData)
         .bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
-        .bind('mouseleave.flexiPanda', {delay: 100, toTrigger: 'rebounded'}, setDelay)
+        .bind('mouseenter.flexiPanda', {delay: 0, toTrigger: 'rebounded'}, setDelay)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .trigger('refresh')
         .trigger('debug');
