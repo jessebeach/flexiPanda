@@ -31,11 +31,13 @@
     // to $(this) and pass it to the setTimeout.
     // The bind is necessary so that trigger is called on the correct
     // pulldown element, rendering 'this' to the correct context.
-    var $this = $(this),
-        func = $.proxy($.fn.trigger, $(this), 'clean'),
-        timeout = setTimeout(func, event.data.delay),
-        timers = $this.data().flexiPanda.timers;
-    timers.push(timeout);
+    var $this = $(this);
+    if (event.data.toTrigger) {
+    	var func = $.proxy($.fn.trigger, $(this), event.data.toTrigger),
+        	timeout = setTimeout(func, event.data.delay),
+        	timers = $this.data().flexiPanda.timers;
+    	timers.push(timeout);
+    }
     $this.trigger('debug');
   }
   function doClean(event) {
@@ -323,7 +325,7 @@
         })
         .bind('reset.flexiPanda', clearDelay)
         .bind('refresh.flexiPanda', {edge: opts.edge}, setItemData)
-        .bind('activated.flexiPanda', {delay: o.delays.items}, setDelay)
+        .bind('activated.flexiPanda', {delay: o.delays.items, toTrigger: 'clean'}, setDelay)
         .bind('pathSelected.flexiPanda', establishPath)
         .bind('clean.flexiPanda', doClean)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
@@ -349,7 +351,7 @@
           // Hover mode
           $root
           .bind('mouseenter.flexiPanda.hoverMode', clearDelay)
-          .bind('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu}, setDelay);
+          .bind('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu, toTrigger: 'clean'}, setDelay);
         
           $li
           .bind('mouseenter.flexiPanda.hoverMode', itemHover);
