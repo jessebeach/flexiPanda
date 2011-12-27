@@ -234,23 +234,6 @@
     // Make a new debugger or detach the existing one.
     return (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
   }
-  function setWindowInfo() {
-    var $debugger = getDebugger($('body')),
-    data = {
-      height: document.documentElement.clientHeight,
-      width: document.documentElement.clientWidth
-    };
-    var content = $.proxy(listMaker, this, data);
-    
-    $debugger
-    .html(content())
-    .css({
-      bottom: 60,
-      position: 'absolute',
-      right: 20
-    })
-    .appendTo('body');
-  }
   function debug(event) {
     event.stopPropagation();
     var $this = $(this);
@@ -357,18 +340,6 @@
           .bind('mouseenter.flexiPanda.hoverMode', itemHover);
           break;
         }
-        
-        // Create window bindings
-        $(window)
-        // There is only one window in the browser, but using each allows
-        // the data() function to be chained.
-        .each(function (index, element) {
-          $(this).data('flexiPanda', {
-            timers: [],
-            processed: 0
-          });
-        })
-        .trigger('resize');
         // Set html. This may be unnecessary.
         $('html')
         .css({
