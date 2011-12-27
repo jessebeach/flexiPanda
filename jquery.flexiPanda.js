@@ -27,7 +27,8 @@
   }
   function prepareClean(event) {
     event.stopPropagation();
-    // Bind the clean event trigger to $(this) and pass it to the setTimeout.
+    // Bind the function designated in event.data.toTrigger
+    // to $(this) and pass it to the setTimeout.
     // The bind is necessary so that trigger is called on the correct
     // pulldown element, rendering 'this' to the correct context.
     var $this = $(this),
@@ -147,27 +148,28 @@
   function reposition(event) {
     event.stopPropagation();
     var $this = $(this);
-    if ($this.is('ul')) {
-      var dimensions = $this.data().flexiPanda.dimensions;
-      $this.data().flexiPanda.processed += 1;
-      // Check if the item falls within the bounds of the viewport within the
-      // configured tolerance.
-      var bounds = checkOutOfBounds(dimensions, event.data.edge.tolerance);
-      // Move the item if it is out of bounds
-      var edge = '';
-      for (edge in bounds) {
-        if (bounds.hasOwnProperty(edge)) {
-          if (!bounds[edge]) {
-            if (dimensions[edge] < 0) {
-              move.call(this, getVector(edge, dimensions[edge], event.data.edge));
-            }
-          }
+    var dimensions = $this.trigger('refresh').data().flexiPanda.dimensions;
+    $this.data().flexiPanda.processed += 1;
+    // Check if the item falls within the bounds of the viewport within the
+    // configured tolerance.
+    var bounds = checkOutOfBounds(dimensions, event.data.edge.tolerance);
+    // Move the item if it is out of bounds
+    var edge = '';
+    for (edge in bounds) {
+      if (bounds.hasOwnProperty(edge)) {
+      	// The bounds array contains a property for each edge. If the edge
+      	// outside the viewport, the value of that edge property
+      	// will be false.
+        if (!bounds[edge]) {
+          // if (dimensions[edge] < 0) {
+            move.call(this, getVector(edge, dimensions[edge], event.data.edge));
+          // }
         }
       }
     }
     // Trigger refresh on the child lists.
     var level = $this.data().flexiPanda.level + 1;
-    $('.fp-level-' + level).trigger('refresh');
+    $('.fp-level-' + level).trigger('rebounded');
   }
   function setItemData(event) {
     event.stopPropagation();
@@ -293,6 +295,7 @@
         .bind('reset.flexiPanda', clearClean)
         .bind('clean.flexiPanda', doClean)
         .bind('refresh.flexiPanda', setItemData)
+        .bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .trigger('refresh')
         .trigger('debug');
@@ -306,10 +309,9 @@
           });
         })
         .bind('refresh.flexiPanda', setItemData)
+        .bind('debug.flexiPanda', (opts.debug) ? debug : false)
         .bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
         .bind('debug.flexiPanda', (opts.debug) ? debug : false)
-        .trigger('refresh')
-        .trigger('rebounded')
         .trigger('debug');
         
         $li
@@ -332,6 +334,11 @@
         // Indicate the level of each menu.
         markListLevels($root, 0);
         
+        // Trigger the rebounded event on the root element to move sub menus
+        // that might be positioned outside the viewport.
+        $root
+        .trigger('rebounded');
+        
         // Set up the behavior mode
         switch (o.mode) {
         case 'click' :
@@ -352,8 +359,16 @@
         
         // Create window bindings
         $(window)
-        .bind('resize.flexiPanda', setWindowInfo)
+        // There is only one window in the browser, but using each allows
+        // the data() function to be chained.
+        .each(function (index, element) {
+          $(this).data('flexiPanda', {
+            timers: [],
+            processed: 0
+          });
+        })
         .trigger('resize');
+        // Set html. This may be unnecessary.
         $('html')
         .css({
           height: '100%',
