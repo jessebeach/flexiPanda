@@ -179,9 +179,34 @@
     event.stopPropagation();
     var $this = $(this),
     data = $this.data().flexiPanda,
-    $parentItem = $this.closest('.fp-item'),
- 		$parentList = $this.closest('.fp-list'),
-    offset = $this.offset(),
+		$parentItem = $this.flexiPanda('parentItem'),
+    $parentList = $this.flexiPanda('parentList');
+    data.dimensions = {};
+	  // Get the dimensions of the parent list
+	  if ($parentList.length > 0) {
+    	var offset = $parentList.offset(),
+    	width = $parentList.width(),
+    	height = $parentList.height();
+	    data.dimensions.parentList = {
+		  	width: width,
+		  	height: height,
+		  	left: offset.left,
+		  	right: (offset.left + width)
+	    };
+	  }
+ 		// Get the dimensions of the parent item
+    if ($parentItem.length > 0) {
+    	var position = $parentItem.position(),
+    	width = $parentItem.width(),
+    	height = $parentItem.height();
+	    data.dimensions.parentItem = {
+		  	width: width,
+		  	height: height,
+		  	top: position.top,
+		  	bottom: (position.top + height)
+	    };
+	  }
+    var offset = $this.offset(),
     height = $this.outerHeight(false),
     width = $this.outerWidth(false),
     client = {
@@ -190,7 +215,18 @@
       height: document.documentElement.clientHeight,
       width: document.documentElement.clientWidth
     };
-    data.dimensions = {};
+    //
+    data.dimensions.ideal = {};
+    if (data.dimensions.parentItem) {
+	    data.dimensions.ideal = {
+	    	top: data.dimensions.parentItem.top
+	    }
+    }
+    if (data.dimensions.parentList) {
+    	data.dimensions.ideal = {
+	    	left: (data.dimensions.parentList.left + data.dimensions.parentList.width) 
+	    }
+    }
     // These dimensions are calculated as distance from the respective
     // edge of the viewport, not as distance from the left/top origin.
     // This allows us to know if an item is out of bounds if the
@@ -203,30 +239,6 @@
       right: (client.width - (offset.left + width)),
       bottom: (client.height - (offset.top + height))
     };
-    // Get the dimensions of the parent item
-    if ($parentItem.length > 0) {
-    	var position = $parentItem.position(),
-    	width = $parentItem.width(),
-    	height = $parentItem.height();
-	    data.dimensions.parentItem = {
-		  	width: width,
-		  	height: height,
-		  	top: position.top,
-		  	bottom: (position.top + height)
-	    };
-	  }
-	  // Get the dimensions of the parent list
-	  if ($parentList.length > 0) {
-    	var position = $parentList.position(),
-    	width = $parentList.width(),
-    	height = $parentList.height();
-	    data.dimensions.parentList = {
-		  	width: width,
-		  	height: height,
-		  	top: position.top,
-		  	bottom: (position.top + height)
-	    };
-	  }
   }
   function listMaker(data) {
     var $list = $('<div>');
@@ -291,22 +303,22 @@
         // Build element specific options. Uses the Metadata plugin if available
         // @see http://docs.jquery.com/Plugins/Metadata/metadata
         var o = $.meta ? $.extend({}, opts, $root.data()) : opts;
-        // implementations
-        var data = $root.data(o.dataIndex);
-        // If the plugin hasn't been initialized yet
-        if (!data) {
-          /* Set up the data. */
-          $root.data(o.dataIndex, {
-            timers: [],
-            debug: o.debug
-          }); 
-        }
         
+        // Get lists and items.
         var $ul = $root.find('ul');
         var $li = $root.find('li');
         // Basic setup
         $root
-        .addClass('fp-root')
+        .addClass('fp-root fp-list')
+        .each(function (index, element) {
+          $(this).data('flexiPanda', {
+            timers: [],
+            debug: o.debug,
+            processed: 0,
+            type: 'root',
+            level: 0
+          });
+        })
         .bind('reset.flexiPanda', clearDelay)
         .bind('clean.flexiPanda', doClean)
         .bind('refresh.flexiPanda', setItemData)
@@ -321,7 +333,9 @@
         .each(function (index, element) {
           $(this).data('flexiPanda', {
             timers: [],
-            processed: 0
+            processed: 0,
+            type: 'list',
+            level: NaN
           });
         })
         .bind('refresh.flexiPanda', setItemData)
@@ -334,7 +348,8 @@
         .each(function (index, element) {
           $(this).data('flexiPanda', {
             timers: [],
-            processed: 0
+            processed: 0,
+            type: 'item'
           });
         })
         .bind('reset.flexiPanda', clearDelay)
@@ -383,6 +398,29 @@
       return this.each(function () {
         $(window).unbind('.flexiPanda');
       });
+    },
+    // Custom traversal functions
+    parentItem : function () {
+    	var data = this.data('flexiPanda'),
+    	parent = $();
+    	if (data.type === 'item') {
+    		parent = this.closest('.fp-list').closest('.fp-item');
+    	}
+    	if (data.type === 'list') {
+    		parent = this.closest('.fp-item');
+    	}
+    	return this.pushStack(parent.get());
+    },
+    parentList : function () {
+    	var data = this.data('flexiPanda'),
+    	parent = $();
+    	if (data.type === 'item') {
+    		parent = this.closest('.fp-list').closest('.fp-item').closest('.fp-list');
+    	}
+    	if (data.type === 'list') {
+    		parent = this.closest('.fp-item').closest('.fp-list');
+    	}
+    	return this.pushStack(parent.get());
     }
   };
 
