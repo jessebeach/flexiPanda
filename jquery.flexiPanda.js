@@ -33,7 +33,7 @@
 		// pulldown element, rendering 'this' to the correct context.
 		var $this = $(this);
 		if (event.data.toTrigger) {
-			var func = $.proxy($.fn.trigger, $(this), event.data.toTrigger),
+			var func = $.proxy($.fn.trigger, $this, event.data.toTrigger),
 			timeout = setTimeout(func, event.data.delay),
 			timers = $this.data().flexiPanda.timers;
 			timers.push(timeout);
@@ -315,7 +315,6 @@
 				.bind('clean.flexiPanda', doClean)
 				.bind('refresh.flexiPanda', setItemData)
 				.bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
-				.bind('mouseenter.flexiPanda', {delay: 0, toTrigger: 'rebounded'}, setDelay)
 				.bind('debug.flexiPanda', (opts.debug) ? debug : false)
 				.trigger('refresh');
 				
@@ -375,7 +374,6 @@
 				case 'hover' :
 					// Hover mode
 					$root
-					.bind('mouseenter.flexiPanda.hoverMode', clearDelay)
 					.bind('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu, toTrigger: 'clean'}, setDelay);
 				
 					$li
