@@ -96,21 +96,21 @@
 			markListLevels($lists, (level + 1));
 		}
 	}
-	function checkOutOfBounds(dimensions, tolerance) {
+	function checkBounds(dimensions, tolerance) {
 		tolerance = (tolerance) ? tolerance : 0;
 		return {
-			left: (dimensions.left >= tolerance),
-			top: (dimensions.top >= tolerance),
-			right: (dimensions.right >= tolerance),
-			bottom: (dimensions.bottom >= tolerance)
+			left: (dimensions.left === undefined) ? undefined : (dimensions.left >= tolerance),
+			top: (dimensions.top === undefined) ? undefined : (dimensions.top >= tolerance),
+			right: (dimensions.right === undefined) ? undefined : (dimensions.right >= tolerance),
+			bottom: (dimensions.bottom === undefined) ? undefined : (dimensions.bottom >= tolerance)
 		};
 	}
 	/**
-	 * Return a vector for a move based on the edge and the distance outside the edge.
+	 * Return a vector for a move based on the edge and the distance delta.
 	 */
-	function getVector(edge, outside, collision) {
+	function getVector(edge, delta, collision) {
 		var tolerance = (collision.tolerance) ? collision.tolerance : 0,
-		buffer = (collision.buffer) ? collision.buffer : 0,
+tolerance = 0,
 		vectors = {
 			horizontal: null,
 			vertical: null
@@ -118,16 +118,16 @@
 		// Moves are made from the top/left origin. So the direction is up or left.
 		switch (edge) {
 		case 'left' :
-			vectors.horizontal = (Math.abs(outside) + buffer);
+			vectors.horizontal = Math.abs(delta);
 			break;
 		case 'right' :
-			vectors.horizontal = (outside - buffer);
+			vectors.horizontal = delta;
 			break;
 		case 'top' :
-			vectors.vertical = (Math.abs(outside) + buffer);
+			vectors.vertical = Math.abs(delta);
 			break;
 		case 'bottom' :
-			vectors.vertical = (outside - buffer);
+			vectors.vertical = delta;
 			break;
 		default :
 			break;
@@ -156,77 +156,78 @@
 		dimensions = $this.trigger('refresh').data().flexiPanda.dimensions,
 		// Check if the item falls within the bounds of the viewport within the
 		// configured tolerance.
-		bounds = checkOutOfBounds(dimensions.item, event.data.edge.tolerance),		
+		bounds = checkBounds(dimensions.item, event.data.edge.tolerance),		
+		// idealBounds is the placement of the item if the viewport had no limits.
+		idealBounds = checkBounds(dimensions.ideal, event.data.edge.tolerance),
 		edge = '';
 		// Move the item if it is out of bounds
 		for (edge in bounds) {
 			if (bounds.hasOwnProperty(edge)) {
-				// The bounds array contains a property for each edge. If the edge
-				// outside the viewport, the value of that edge property
-				// will be false.
-				if (!bounds[edge]) {
-					// if (dimensions[edge] < 0) {
-						move.call(this, getVector(edge, dimensions[edge], event.data.edge));
-					// }
+				// If the idealBound is true and the ideal bound is closer to the client
+				// edge than the current item edge, move it the difference of the distance
+				// between the two positions.
+				if (idealBounds[edge] === true && (dimensions.ideal[edge] > event.data.edge.tolerance) && (dimensions.ideal[edge] < dimensions.item[edge])) {
+					move.call(this, getVector(edge, (dimensions.item[edge] - dimensions.ideal[edge]), event.data.edge));
 				}
+				// If the idealBound is false and the current item edge is farther from the
+				// client edge than the tolerance, reposition it.
+				if (idealBounds[edge] === false && (dimensions.item[edge] > event.data.edge.tolerance)) {
+					move.call(this, getVector(edge, event.data.edge.tolerance, event.data.edge));
+				}
+				// If the item is outside the edge of the screen, reposition it.
+				if (bounds[edge] === false) {
+					move.call(this, getVector(edge, dimensions.item[edge], event.data.edge));
+				}
+				idealBounds[edge] = bounds[edge] = true;
 			}
 		}
 		// Trigger refresh on the child lists.
 		var level = $this.data().flexiPanda.level + 1;
-		$('.fp-level-' + level).trigger('rebounded');
+		$('.fp-level-' + level).trigger('rebounded')
+.trigger('refresh')
+.trigger('debug');
 	}
 	function setItemData(event) {
 		event.stopPropagation();
 		var $this = $(this),
 		data = $this.data().flexiPanda,
 		$parentItem = $this.flexiPanda('parentItem'),
-		$parentList = $this.flexiPanda('parentList');
-		data.dimensions = {};
-		// Get the dimensions of the parent list
-		if ($parentList.length > 0) {
-			var offset = $parentList.offset(),
-			width = $parentList.width(),
-			height = $parentList.height();
-			data.dimensions.parentList = {
-				width: width,
-				height: height,
-				left: offset.left,
-				right: (offset.left + width)
-			};
-		}
- 		// Get the dimensions of the parent item
-		if ($parentItem.length > 0) {
-			var position = $parentItem.position(),
-			width = $parentItem.width(),
-			height = $parentItem.height();
-			data.dimensions.parentItem = {
-				width: width,
-				height: height,
-				top: position.top,
-				bottom: (position.top + height)
-			};
-		}
-		var offset = $this.offset(),
-		height = $this.outerHeight(false),
-		width = $this.outerWidth(false),
+		$parentList = $this.flexiPanda('parentList'),
+		offset = NaN,
 		client = {
 			left: document.documentElement.clientLeft,
 			top: document.documentElement.clientTop,
 			height: document.documentElement.clientHeight,
 			width: document.documentElement.clientWidth
 		};
-		//
-		data.dimensions.ideal = {};
-		if (data.dimensions.parentItem) {
-			data.dimensions.ideal = {
-				top: data.dimensions.parentItem.top
-			}
+		data.dimensions = {}
+		// Get the dimensions of the parent list
+		if ($parentList.length > 0) {
+			offset = $parentList.offset(),
+			width = $parentList.width(),
+			height = $parentList.height();
+			data.dimensions.parentList = {
+				width: width,
+				height: height,
+				left: offset.left,
+				right: client.width - (offset.left + width)
+			};
 		}
-		if (data.dimensions.parentList) {
-			data.dimensions.ideal = {
-				left: (data.dimensions.parentList.left + data.dimensions.parentList.width) 
-			}
+ 		// Get the dimensions of the parent item
+		if ($parentItem.length > 0) {
+			offset = $parentItem.offset(),
+			width = $parentItem.width(),
+			height = $parentItem.height();
+			data.dimensions.parentItem = {
+				width: width,
+				height: height,
+				top: offset.top,
+				bottom: client.height - (offset.top + height)
+			};
 		}
+		offset = $this.offset(),
+		height = $this.outerHeight(false),
+		width = $this.outerWidth(false);
 		// These dimensions are calculated as distance from the respective
 		// edge of the viewport, not as distance from the left/top origin.
 		// This allows us to know if an item is out of bounds if the
@@ -239,6 +240,18 @@
 			right: (client.width - (offset.left + width)),
 			bottom: (client.height - (offset.top + height))
 		};
+		// The placement of the element if the viewport had no limits.
+		data.dimensions.ideal = {};
+		if (data.dimensions.parentItem) {
+			data.dimensions.ideal.top = data.dimensions.parentItem.top;
+			data.dimensions.ideal.bottom = client.height - (data.dimensions.ideal.top + data.dimensions.item.height);
+		}
+		if (data.dimensions.parentList) {
+			data.dimensions.ideal.left = data.dimensions.parentList.left + data.dimensions.parentList.width;
+			data.dimensions.ideal.right = (client.width > (data.dimensions.parentList.left + data.dimensions.parentList.width + 10)) ? (client.width - (data.dimensions.ideal.left + data.dimensions.item.width)) : 0;
+			if (client.width < (data.dimensions.parentList.left + data.dimensions.parentList.width + 10))
+				var hello = data.dimensions.ideal.right;
+		}
 	}
 	function listMaker(data) {
 		var $list = $('<div>');
@@ -325,8 +338,7 @@
 				.bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
 				.bind('mouseenter.flexiPanda', {delay: 0, toTrigger: 'rebounded'}, setDelay)
 				.bind('debug.flexiPanda', (opts.debug) ? debug : false)
-				.trigger('refresh')
-				.trigger('debug');
+				.trigger('refresh');
 				
 				$ul
 				.addClass('fp-list')
@@ -340,8 +352,7 @@
 				})
 				.bind('refresh.flexiPanda', setItemData)
 				.bind('rebounded.flexiPanda', {edge: opts.edge}, reposition)
-				.bind('debug.flexiPanda', (opts.debug) ? debug : false)
-				.trigger('debug');
+				.bind('debug.flexiPanda', (opts.debug) ? debug : false);
 				
 				$li
 				.addClass('fp-item')
@@ -357,9 +368,8 @@
 				.bind('activated.flexiPanda', {delay: o.delays.items, toTrigger: 'clean'}, setDelay)
 				.bind('pathSelected.flexiPanda', establishPath)
 				.bind('clean.flexiPanda', doClean)
-				.bind('debug.flexiPanda', (opts.debug) ? debug : false)
-				.trigger('refresh')
-				.trigger('debug');
+				/*.bind('debug.flexiPanda', (opts.debug) ? debug : false)*/
+				.trigger('refresh');
 				
 				// Indicate the level of each menu.
 				markListLevels($root, 0);
@@ -368,6 +378,13 @@
 				// that might be positioned outside the viewport.
 				$root
 				.trigger('rebounded');
+				
+				if (opts.debug) {
+					$root.trigger('debug');
+					$ul.trigger('debug');
+					$li.trigger('debug');
+				}
+				
 				
 				// Set up the behavior mode
 				switch (o.mode) {
@@ -401,7 +418,7 @@
 		},
 		// Custom traversal functions
 		parentItem : function () {
-			var data = this.data('flexiPanda'),
+			var data = this.data().flexiPanda,
 			parent = $();
 			if (data.type === 'item') {
 				parent = this.closest('.fp-list').closest('.fp-item');
@@ -412,7 +429,7 @@
 			return this.pushStack(parent.get());
 		},
 		parentList : function () {
-			var data = this.data('flexiPanda'),
+			var data = this.data().flexiPanda,
 			parent = $();
 			if (data.type === 'item') {
 				parent = this.closest('.fp-list').closest('.fp-item').closest('.fp-list');
@@ -447,8 +464,7 @@
 		debug: false,
 		dataIndex: 'flexiPanda',
 		edge: {
-			tolerance: 10,
-			buffer: 10
+			tolerance: 10
 		}
 	};
 }
