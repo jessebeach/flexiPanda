@@ -96,56 +96,31 @@
 			markListLevels($lists, (level + 1));
 		}
 	}
-	function checkBounds(dimensions, tolerance) {
-		tolerance = (tolerance) ? tolerance : 0;
-		return {
-			left: (dimensions.left === undefined) ? undefined : (dimensions.left >= tolerance),
-			top: (dimensions.top === undefined) ? undefined : (dimensions.top >= tolerance),
-			right: (dimensions.right === undefined) ? undefined : (dimensions.right >= tolerance),
-			bottom: (dimensions.bottom === undefined) ? undefined : (dimensions.bottom >= tolerance)
-		};
-	}
 	/**
-	 * Return a vector for a move based on the edge and the distance delta.
+	 * 
 	 */
-	function getVector(edge, delta, collision) {
-		var tolerance = (collision.tolerance) ? collision.tolerance : 0,
-tolerance = 0,
-		vectors = {
-			horizontal: null,
-			vertical: null
+	function checkBounds(dimensions, tolerance) {
+		return {
+			left: (dimensions.left === undefined) ? undefined : (dimensions.left >= 0),
+			top: (dimensions.top === undefined) ? undefined : (dimensions.top >= 0),
+			right: (dimensions.right === undefined) ? undefined : (dimensions.right >= 0),
+			bottom: (dimensions.bottom === undefined) ? undefined : (dimensions.bottom >= 0)
 		};
-		// Moves are made from the top/left origin. So the direction is up or left.
-		switch (edge) {
-		case 'left' :
-			vectors.horizontal = Math.abs(delta);
-			break;
-		case 'right' :
-			vectors.horizontal = delta;
-			break;
-		case 'top' :
-			vectors.vertical = Math.abs(delta);
-			break;
-		case 'bottom' :
-			vectors.vertical = delta;
-			break;
-		default :
-			break;
-		}
-		return vectors;
 	}
 	/**
+	 * @todo This needs to be updated for RTL language support.
+	 *
 	 * param vectors {object}
 	 */
 	function move(vectors) {
 		var $this = $(this),
 		offset = $this.offset(),
 		coords = {};
-		if (vectors.horizontal) {
-			coords.left = (offset.left + vectors.horizontal);
+		if (vectors['right']) {
+			coords.left = (offset.left + vectors['right']);
 		}
-		if (vectors.vertical) {
-			coords.top = (offset.top + vectors.vertical);
+		if (vectors['top']) {
+			coords.top = (offset.top + vectors['top']);
 		}
 		// Move the item.
 		$this.offset(coords);
@@ -153,39 +128,43 @@ tolerance = 0,
 	function reposition(event) {
 		event.stopPropagation();
 		var $this = $(this),
-		dimensions = $this.trigger('refresh').data().flexiPanda.dimensions,
+		data = $this.trigger('refresh').data().flexiPanda,
+		dimensions = data.dimensions,
 		// Check if the item falls within the bounds of the viewport within the
 		// configured tolerance.
 		bounds = checkBounds(dimensions.item, event.data.edge.tolerance),		
 		// idealBounds is the placement of the item if the viewport had no limits.
 		idealBounds = checkBounds(dimensions.ideal, event.data.edge.tolerance),
-		edge = '';
+		edge = '',
+		vectors = {};
 		// Move the item if it is out of bounds
 		for (edge in bounds) {
 			if (bounds.hasOwnProperty(edge)) {
 				// If the idealBound is true and the ideal bound is closer to the client
 				// edge than the current item edge, move it the difference of the distance
 				// between the two positions.
-				if (idealBounds[edge] === true && (dimensions.ideal[edge] > event.data.edge.tolerance) && (dimensions.ideal[edge] < dimensions.item[edge])) {
-					move.call(this, getVector(edge, (dimensions.item[edge] - dimensions.ideal[edge]), event.data.edge));
+				if (idealBounds[edge] === true && (dimensions.ideal[edge] > 0) && (dimensions.ideal[edge] < dimensions.item[edge])) {
+					vectors[edge] = dimensions.item[edge] - dimensions.ideal[edge];
 				}
 				// If the idealBound is false and the current item edge is farther from the
 				// client edge than the tolerance, reposition it.
-				if (idealBounds[edge] === false && (dimensions.item[edge] > event.data.edge.tolerance)) {
-					move.call(this, getVector(edge, event.data.edge.tolerance, event.data.edge));
+				if (idealBounds[edge] === false && (dimensions.item[edge] > 0)) {
+					vectors[edge] = dimensions.item[edge];
 				}
 				// If the item is outside the edge of the screen, reposition it.
 				if (bounds[edge] === false) {
-					move.call(this, getVector(edge, dimensions.item[edge], event.data.edge));
+					vectors[edge] = dimensions.item[edge];
 				}
 				idealBounds[edge] = bounds[edge] = true;
 			}
 		}
-		// Trigger refresh on the child lists.
-		var level = $this.data().flexiPanda.level + 1;
-		$('.fp-level-' + level).trigger('rebounded')
-.trigger('refresh')
-.trigger('debug');
+		// Move the item. move() will deal with conflicting vectors
+		if (!$.isEmptyObject(vectors)) {
+			move.call(this, vectors);
+		}
+		// Trigger refresh on the child lists. Parent lists have to be repositioned
+		// before child lists.
+		$this.find('.fp-level-' + (data.level + 1)).trigger('rebounded');
 	}
 	function setItemData(event) {
 		event.stopPropagation();
