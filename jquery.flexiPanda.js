@@ -132,6 +132,38 @@
 		};
 	}
 	/**
+	 *
+	 */
+	function checkDataFreshness(data) {
+		// If the item hasn't been processed, just return.
+		if (data.processed === false || data.processed === undefined) {
+			return null;
+		}
+		data.dimensions = data.dimensions || {};
+		// If the item knows nothing about the client yet,
+		// then the data is stale.
+		if (data.dimensions.client === undefined) {
+			data.processed = false;
+			return null;
+		}
+		// Get the current client dimensions.
+		var client = {
+			left: document.documentElement.clientLeft,
+			top: document.documentElement.clientTop,
+			height: document.documentElement.clientHeight,
+			width: document.documentElement.clientWidth
+		}, 
+		edge = '';
+		for (edge in client) {
+			if (client.hasOwnProperty(edge)) {
+				if (client[edge] !== data.dimensions.client[edge]) {
+					data.processed = false;
+					return null;
+				}
+			}
+		}
+	}
+	/**
 	 * Moves elements around the page based on a vector object.
 	 *
 	 * param vectors {object}
@@ -157,7 +189,7 @@
 		$this.offset(coords);
 	}
 	/**
-	 *
+	 * Shifts the item lists with margins.
 	 */
 	function shiftPosition(data, opts) {
 		var $this = $(this),
@@ -263,6 +295,7 @@
 		var $this = $(this),
 		cache = (event.cache !== undefined) ? event.cache : true,
 		data = $this.data().flexiPanda;
+		checkDataFreshness.call(this, data);
 		// Only process the item's data if cache is false (meaning the
 		// cache is intentionally busted) or if the item has not been
 		// processed yet. This function gets called a lot and it 
@@ -280,6 +313,7 @@
 			data.parentItem = $parentItem;
 			data.parentList = $parentList;
 			data.dimensions = {};
+			data.dimensions.client = client;
 			// Get the dimensions of the parent list
 			if ($parentList.length > 0) {
 				offset = $parentList.offset(),
