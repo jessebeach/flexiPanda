@@ -21,6 +21,9 @@
 	textDirection = (textDirection) ? textDirection : 'ltr';
 
 	// Private function definitions
+	/**
+	 * Clear all the timers on an element.
+	 */
 	function clearDelay(event) {
 		event.stopPropagation();
 		var $this = $(this);
@@ -29,6 +32,9 @@
 			clearTimeout(timers.pop());
 		}
 	}
+	/**
+	 * Create a delay to call a function on an element.
+	 */
 	function setDelay(event) {
 		event.stopPropagation();
 		// Bind the function designated in event.data.toTrigger
@@ -44,6 +50,9 @@
 		}
 		$this.trigger('debug');
 	}
+	/**
+	 * Clean the interaction classes from the element and its children.
+	 */
 	function doClean(event) {
 		event.stopPropagation();
 		var $this = $(this);
@@ -53,6 +62,9 @@
 		.trigger('reset')
 		.trigger('debug');
 	}
+	/**
+	 * Set interaction classes on the hovered element and it's ancestors.
+	 */
 	function establishPath(event) {
 		event.stopPropagation();
 		$(this)
@@ -65,6 +77,9 @@
 		.siblings('li')
 		.trigger('activated');
 	}
+	/**
+	 * Handles the hover event of li elements.
+	 */
 	function itemHover(event) {
 		event.stopPropagation();
 		$(this)
@@ -79,6 +94,9 @@
 		.closest('ul')
 		.trigger('debug');
 	}
+	/**
+	 * Hangles the click event of li elements.
+	 */
 	function itemClick(event) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -257,6 +275,9 @@
 			}
 		}
 	}
+	/**
+	 * Returns a <ul> list from a javascript object.
+	 */
 	function listMaker(data) {
 		var $list = $('<div>');
 		for (var datum in data) {
@@ -281,6 +302,9 @@
 			text: 'null'
 		});
 	}
+	/**
+	 * Returns a renderable list of item data for debugging.
+	 */
 	function renderItemData() {
 		var $this = $(this),
 		data = $this.data().flexiPanda,
@@ -293,6 +317,9 @@
 		// Make a new debugger or detach the existing one.
 		return (!$debugger.length > 0) ? $('<div>').addClass('fp-debug') : $debugger;
 	}
+	/**
+	 * Appends a debugger to elements listening to debug events.
+	 */
 	function debug(event) {
 		event.stopPropagation();
 		var $this = $(this);
@@ -310,6 +337,9 @@
 			.appendTo($this);
 		}
 	}
+	/**
+	 * Public methods of the flexiPanda plugin.
+	 */
 	var methods = {
 		init : function (options) {
 			// Add the dir attribute to the HTML element if it does not exist.
@@ -449,7 +479,7 @@
 		}
 	};
 
-	// Instantiation.
+	// Add the plugin to the jQuery fn object.
 	$.fn.flexiPanda = function (method) {
 		// Method calling logic
 		if (methods[method]) {
@@ -461,7 +491,7 @@
 		}
 	};
 		
-	// plugin defaults
+	// FlexiPanda plugin defaults.
 	$.fn.flexiPanda.defaults = {
 		dev: false,
 		delays: {
@@ -476,5 +506,5 @@
 		}
 	};
 }
-// Pass jQuery as the param to the preceding anonymous function
+// Pass jQuery as the param to the preceding anonymous function.
 (jQuery));
