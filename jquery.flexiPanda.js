@@ -192,10 +192,15 @@
 				idealBounds[edge] = bounds[edge] = true;
 			}
 		}
-		// Move the item. move() will deal with conflicting vectors
+		// Move the item. 
+		// move() will deal with conflicting vectors
 		if (!$.isEmptyObject(vectors)) {
 			move.call(this, vectors);
+			data = $this.trigger('refresh').data().flexiPanda;
 		}
+		// Shift the lists by adjust margins to correct lists against the edge 
+		// of the screen and lists occluding other lists.
+		
 		// Trigger refresh on the child lists. Parent lists have to be repositioned
 		// before child lists.
 		$this.find('.fp-level-' + (data.level + 1)).trigger('rebounded');
@@ -216,7 +221,9 @@
 			height: document.documentElement.clientHeight,
 			width: document.documentElement.clientWidth
 		};
-		data.dimensions = {}
+		data.parentItem = $parentItem;
+		data.parentList = $parentList;
+		data.dimensions = {};
 		// Get the dimensions of the parent list
 		if ($parentList.length > 0) {
 			offset = $parentList.offset(),
@@ -286,9 +293,20 @@
 				$item.append($('<span>', {
 					text: datum + ': '
 				}));
-				 // If this is an object, recurse the function
+				 // Deal with objects.
 				if (typeof(data[datum]) === 'object') {
-					$item.append(listMaker(data[datum]));
+					// jQuery objects are large and will stall the browse
+					// if we try to print them. Just state that this is
+					// a jQuery object.
+					if (data[datum].jquery) {
+						$item.append($('<b>', {
+							text: '[jQuery] jQuery object'
+						}));
+					}
+					// Otherwise recurse the function.
+					else {
+						$item.append(listMaker(data[datum]));
+					}
 				}
 				else {
 					$item.append($('<b>', {
