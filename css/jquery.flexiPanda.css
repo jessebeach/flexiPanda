@@ -1,6 +1,6 @@
 /** 
 * @file
-* Default dropdown style definitions.
+* Default dropdown behavior definitions.
 */
 
 /* @group Behavior */
@@ -17,22 +17,14 @@
 }
 
 .pulldown ul {
-  box-shadow: 0px 3px 5px #444;
   position: absolute;
   top: 0;
   visibility: hidden;
-  min-width: 18em;
-  z-index: 200;
 }
 
 .pulldown li,
 .pulldown a {
   position: relative;
-}
-
-.pulldown li:hover,
-.pulldown a:hover {
-  cursor: pointer;
 }
 
 .pulldown li {
@@ -46,11 +38,6 @@
 .pulldown li:hover > ul,
 .pulldown .fp-trail > ul { /* Show the sub-menus */
   visibility: visible;
-}
-
-.pulldown li + li {
-  margin-left: 0; /* LTR */
-  padding-left: 0; /* LTR */
 }
 
 .pulldown a {
@@ -70,48 +57,16 @@ html[dir="rtl"] .pulldown.no-js ul {
   right: 18em;
 }
 
-/* @end */
+html[dir="ltr"] .pulldown.no-js li + li {
+  margin-left: 0;
+  padding-left: 0;
+}
 
-/* @end */
-
-/* @group Appearance */
-
-.fp-root li:hover,
-.fp-root .fp-trail {
-  background-color: rgba(0, 255, 255, 0.5);
+html[dir="rtl"] .pulldown.no-js li + li {
+  margin-right: 0;
+  padding-right: 0;
 }
 
 /* @end */
-
-/* @group Debug */
-
-.fp-debug {
-  border: 1px solid black;
-  font-size: 0.8787rem;
-}
-
-.fp-debug div div {
-  margin-left: 4px;
-}
-
-li > .fp-debug {
-  background-color: rgb(240, 240, 240);
-}
-
-ul > .fp-debug {
-  background-color: rgb(240, 240, 140);
-}
-
-.fp-debug .fp-data {
-  margin: 0;
-  padding: 3px;
-}
-
-.fp-debug .fp-data::after {
-  content: ".";
-  display: block;
-  height: 0;
-  visibility: hidden;
-}
 
 /* @end */

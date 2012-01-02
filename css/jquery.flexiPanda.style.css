@@ -1,0 +1,71 @@
+/** 
+* @file
+* Default dropdown style definitions.
+*/
+
+/* @group Appearance */
+
+.pulldown ul {
+  box-shadow: 0px 3px 5px #444;
+  min-width: 18em;
+}
+
+.pulldown li:hover,
+.pulldown a:hover {
+  cursor: pointer;
+}
+
+.fp-root li:hover,
+.fp-root .fp-trail {
+  background-color: rgba(0, 255, 255, 0.5);
+}
+
+/* @end */
+
+/* @group Debug */
+
+.fp-debug {
+  border: 1px solid black;
+  font-size: 0.8787rem;
+}
+
+.fp-debug div div {
+  margin-left: 4px;
+}
+
+li > .fp-debug {
+  background-color: rgb(240, 240, 240);
+}
+
+ul > .fp-debug {
+  background-color: rgb(240, 240, 140);
+}
+
+.fp-debug .fp-data {
+  margin: 0;
+  padding: 3px;
+}
+
+.fp-debug .fp-data::after {
+  content: ".";
+  display: block;
+  height: 0;
+  visibility: hidden;
+}
+.fp-level-0 {
+	background-color: rgb(235,255,255);
+}
+
+.fp-level-1 {
+	background-color: rgb(190,200,255);
+}
+
+.fp-level-2 {
+	background-color: rgb(120,215,255);
+}
+
+.fp-level-3 {
+	background-color: rgb(35,235,180);
+}
+
+/* @end */
