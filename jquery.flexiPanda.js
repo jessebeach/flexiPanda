@@ -159,39 +159,49 @@
 	/**
 	 *
 	 */
-	function shiftPosition(data, tolerance) {
+	function shiftPosition(data, opts) {
 		var $this = $(this),
-		vectors = {top: 'top', bottom: 'top'},
+		vectors = {top: {dir: 'top', sign: ''}, bottom: {dir: 'top', sign: '-'}},
 		vector = '',
-		delta = NaN,
-		index = '',
-		sign = '',
-		cssObj = {};
+		tolerance = opts.tolerance,
+		buffer = opts.buffer,
+		delta = 0,
+		occlusionFix = {},
+		fixes = 0;
 		// LRT and RTL languages are dealt with separately.
 		if (textDirection === 'rtl') {
-			vectors['left'] = 'left';
+			vectors['left'] = {dir: 'left', sign: ''};
 		}
 		else {
-			vectors['right'] = 'left';
-			sign = '-';
+			vectors['right'] = {dir: 'left', sign: '-'};
 		}
 		var dimensions = data.dimensions.item,
 		parentListDimensions = data.dimensions.parentList;
-		// Check if the item is at least as far as the tolerance from the viewport edges.
 		for (vector in vectors) {
 			if (vectors.hasOwnProperty(vector)) {
+				var index = 'margin-' + vectors[vector].dir;
+				// If the list is closer to the viewport than tolerance, shift it with margins
+				// to the tolerance value.
 				if (dimensions[vector] < tolerance) {
 					delta = tolerance - dimensions[vector];
-					index = 'margin-' + vectors[vector];
-					cssObj[index] = sign + delta + 'px';
-					$this.css(cssObj);
+					var obj = {};
+					obj[index] = vectors[vector].sign + delta + 'px';
+					$this.css(obj);
+				}
+				// If the list occludes its parent lists, shift it with margins.
+				if (parentListDimensions) {
+					var diff = Math.abs((dimensions[vector] + delta) - parentListDimensions[vector]);
+					if (diff < tolerance) {
+						delta = buffer - diff;
+						occlusionFix[index] = vectors[vector].sign + buffer + 'px';
+						fixes += 1;
+						if (fixes > 1) {
+							$this.css(occlusionFix);
+						}
+					}
 				}
 			}
 		}
-		
-		
-		// Check if the item is occluding its parent items.
-		return null;
 	}
 	/**
 	 * Responds to the rebounded event.
@@ -239,7 +249,7 @@
 		}
 		// Shift the lists by adjusting margins to correct lists against the edge 
 		// of the screen and lists occluding other lists.
-		shiftPosition.call(this, data, event.data.edge.tolerance);
+		shiftPosition.call(this, data, event.data.edge);
 		
 		// Trigger refresh on the child lists. Parent lists have to be repositioned
 		// before child lists.
@@ -562,7 +572,8 @@
 		debug: false,
 		dataIndex: 'flexiPanda',
 		edge: {
-			tolerance: 10
+			tolerance: 10,
+			buffer: 14
 		}
 	};
 }

@@ -31,7 +31,8 @@
   z-index: 50;
 }
 
-.pulldown li:hover {
+.pulldown li:hover,
+.pulldown li.fp-hovered {
   z-index: 51; /* Pull the active trail li's above the other li's */
 }
 
