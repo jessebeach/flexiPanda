@@ -245,7 +245,7 @@
 		// move() will deal with conflicting vectors
 		if (!$.isEmptyObject(vectors)) {
 			move.call(this, vectors);
-			data = $this.trigger('refresh').data().flexiPanda;
+			data = $this.trigger({type: 'refresh', cache: false}).data().flexiPanda;
 		}
 		// Shift the lists by adjusting margins to correct lists against the edge 
 		// of the screen and lists occluding other lists.
@@ -261,77 +261,86 @@
 	function setItemData(event) {
 		event.stopPropagation();
 		var $this = $(this),
-		data = $this.data().flexiPanda,
-		$parentItem = $this.flexiPanda('parentItem'),
-		$parentList = $this.flexiPanda('parentList'),
-		offset = NaN,
-		client = {
-			left: document.documentElement.clientLeft,
-			top: document.documentElement.clientTop,
-			height: document.documentElement.clientHeight,
-			width: document.documentElement.clientWidth
-		};
-		data.parentItem = $parentItem;
-		data.parentList = $parentList;
-		data.dimensions = {};
-		// Get the dimensions of the parent list
-		if ($parentList.length > 0) {
-			offset = $parentList.offset(),
-			width = $parentList.width(),
-			height = $parentList.height();
-			data.dimensions.parentList = {
+		cache = (event.cache !== undefined) ? event.cache : true,
+		data = $this.data().flexiPanda;
+		// Only process the item's data if cache is false (meaning the
+		// cache is intentionally busted) or if the item has not been
+		// processed yet. This function gets called a lot and it 
+		// interacts heavily with the DOM, so it should be run without cause.
+		if (!cache || !data.processed) {
+			var $parentItem = $this.flexiPanda('parentItem'),
+			$parentList = $this.flexiPanda('parentList'),
+			offset = NaN,
+			client = {
+				left: document.documentElement.clientLeft,
+				top: document.documentElement.clientTop,
+				height: document.documentElement.clientHeight,
+				width: document.documentElement.clientWidth
+			};
+			data.parentItem = $parentItem;
+			data.parentList = $parentList;
+			data.dimensions = {};
+			// Get the dimensions of the parent list
+			if ($parentList.length > 0) {
+				offset = $parentList.offset(),
+				width = $parentList.width(),
+				height = $parentList.height();
+				data.dimensions.parentList = {
+					width: width,
+					height: height,
+					left: offset.left,
+					right: client.width - (offset.left + width),
+					top: offset.top,
+					bottom: client.height - (offset.top + height)
+				};
+			}
+	 		// Get the dimensions of the parent item
+			if ($parentItem.length > 0) {
+				offset = $parentItem.offset(),
+				width = $parentItem.width(),
+				height = $parentItem.height();
+				data.dimensions.parentItem = {
+					width: width,
+					height: height,
+					top: offset.top,
+					bottom: client.height - (offset.top + height)
+				};
+			}
+			offset = $this.offset(),
+			height = $this.outerHeight(false),
+			width = $this.outerWidth(false);
+			// These dimensions are calculated as distance from the respective
+			// edge of the viewport, not as distance from the left/top origin.
+			// This allows us to know if an item is out of bounds if the
+			// distance is negative.
+			data.dimensions.item = {
 				width: width,
 				height: height,
 				left: offset.left,
-				right: client.width - (offset.left + width),
 				top: offset.top,
-				bottom: client.height - (offset.top + height)
+				right: (client.width - (offset.left + width)),
+				bottom: (client.height - (offset.top + height))
 			};
-		}
- 		// Get the dimensions of the parent item
-		if ($parentItem.length > 0) {
-			offset = $parentItem.offset(),
-			width = $parentItem.width(),
-			height = $parentItem.height();
-			data.dimensions.parentItem = {
-				width: width,
-				height: height,
-				top: offset.top,
-				bottom: client.height - (offset.top + height)
-			};
-		}
-		offset = $this.offset(),
-		height = $this.outerHeight(false),
-		width = $this.outerWidth(false);
-		// These dimensions are calculated as distance from the respective
-		// edge of the viewport, not as distance from the left/top origin.
-		// This allows us to know if an item is out of bounds if the
-		// distance is negative.
-		data.dimensions.item = {
-			width: width,
-			height: height,
-			left: offset.left,
-			top: offset.top,
-			right: (client.width - (offset.left + width)),
-			bottom: (client.height - (offset.top + height))
-		};
-		// The placement of the element if the viewport had no limits.
-		data.dimensions.ideal = {};
-		if (data.dimensions.parentItem) {
-			data.dimensions.ideal.top = data.dimensions.parentItem.top;
-			data.dimensions.ideal.bottom = client.height - (data.dimensions.ideal.top + data.dimensions.item.height);
-		}
-		if (data.dimensions.parentList) {
-			/* LTR text */
-			if (textDirection === 'ltr' || textDirection === 'undefined') {
-				data.dimensions.ideal.left = data.dimensions.parentList.left + data.dimensions.parentList.width;
-				data.dimensions.ideal.right = client.width - (data.dimensions.ideal.left + data.dimensions.item.width);
+			// The placement of the element if the viewport had no limits.
+			data.dimensions.ideal = {};
+			if (data.dimensions.parentItem) {
+				data.dimensions.ideal.top = data.dimensions.parentItem.top;
+				data.dimensions.ideal.bottom = client.height - (data.dimensions.ideal.top + data.dimensions.item.height);
 			}
-			/* RTL text */
-			if (textDirection === 'rtl') {
-				data.dimensions.ideal.left = data.dimensions.parentList.left - data.dimensions.parentList.width;
-				data.dimensions.ideal.right = client.width - (data.dimensions.ideal.left - data.dimensions.item.width);
+			if (data.dimensions.parentList) {
+				/* LTR text */
+				if (textDirection === 'ltr' || textDirection === 'undefined') {
+					data.dimensions.ideal.left = data.dimensions.parentList.left + data.dimensions.parentList.width;
+					data.dimensions.ideal.right = client.width - (data.dimensions.ideal.left + data.dimensions.item.width);
+				}
+				/* RTL text */
+				if (textDirection === 'rtl') {
+					data.dimensions.ideal.left = data.dimensions.parentList.left - data.dimensions.parentList.width;
+					data.dimensions.ideal.right = client.width - (data.dimensions.ideal.left - data.dimensions.item.width);
+				}
 			}
+			// Mark this item as processed.
+			data.processed = true;
 		}
 	}
 	/**
@@ -437,7 +446,7 @@
 					$(this).data('flexiPanda', {
 						timers: [],
 						debug: o.debug,
-						processed: 0,
+						processed: false,
 						type: 'root',
 						level: 0
 					});
@@ -454,7 +463,7 @@
 				.each(function (index, element) {
 					$(this).data('flexiPanda', {
 						timers: [],
-						processed: 0,
+						processed: false,
 						type: 'list',
 						level: NaN
 					});
@@ -468,12 +477,12 @@
 				.each(function (index, element) {
 					$(this).data('flexiPanda', {
 						timers: [],
-						processed: 0,
+						processed: false,
 						type: 'item'
 					});
 				})
 				.bind('reset.flexiPanda', clearDelay)
-				.bind('refresh.flexiPanda', {edge: opts.edge}, setItemData)
+				.bind('refresh.flexiPanda', setItemData)
 				.bind('activated.flexiPanda', {delay: o.delays.items, toTrigger: 'clean'}, setDelay)
 				.bind('pathSelected.flexiPanda', establishPath)
 				.bind('clean.flexiPanda', doClean)
