@@ -157,18 +157,57 @@
 		$this.offset(coords);
 	}
 	/**
+	 *
+	 */
+	function shiftPosition(data, tolerance) {
+		var $this = $(this),
+		vectors = {top: 'top', bottom: 'top'},
+		vector = '',
+		delta = NaN,
+		index = '',
+		sign = '',
+		cssObj = {};
+		// LRT and RTL languages are dealt with separately.
+		if (textDirection === 'rtl') {
+			vectors['left'] = 'left';
+		}
+		else {
+			vectors['right'] = 'left';
+			sign = '-';
+		}
+		var dimensions = data.dimensions.item,
+		parentListDimensions = data.dimensions.parentList;
+		// Check if the item is at least as far as the tolerance from the viewport edges.
+		for (vector in vectors) {
+			if (vectors.hasOwnProperty(vector)) {
+				if (dimensions[vector] < tolerance) {
+					delta = tolerance - dimensions[vector];
+					index = 'margin-' + vectors[vector];
+					cssObj[index] = sign + delta + 'px';
+					$this.css(cssObj);
+				}
+			}
+		}
+		
+		
+		// Check if the item is occluding its parent items.
+		return null;
+	}
+	/**
 	 * Responds to the rebounded event.
 	 */
 	function reposition(event) {
 		event.stopPropagation();
-		var $this = $(this),
-		data = $this.trigger('refresh').data().flexiPanda,
+		var $this = $(this);
+		// Remove any margins from position shifting.
+		$this.css({margin: 0});		
+		var data = $this.trigger('refresh').data().flexiPanda,
 		dimensions = data.dimensions,
 		// Check if the item falls within the bounds of the viewport within the
 		// configured tolerance.
-		bounds = checkBounds(dimensions.item, event.data.edge.tolerance),		
+		bounds = checkBounds(dimensions.item),		
 		// idealBounds is the placement of the item if the viewport had no limits.
-		idealBounds = checkBounds(dimensions.ideal, event.data.edge.tolerance),
+		idealBounds = checkBounds(dimensions.ideal),
 		edge = '',
 		vectors = {};
 		// Move the item if it is out of bounds
@@ -198,8 +237,9 @@
 			move.call(this, vectors);
 			data = $this.trigger('refresh').data().flexiPanda;
 		}
-		// Shift the lists by adjust margins to correct lists against the edge 
+		// Shift the lists by adjusting margins to correct lists against the edge 
 		// of the screen and lists occluding other lists.
+		shiftPosition.call(this, data, event.data.edge.tolerance);
 		
 		// Trigger refresh on the child lists. Parent lists have to be repositioned
 		// before child lists.
@@ -233,7 +273,9 @@
 				width: width,
 				height: height,
 				left: offset.left,
-				right: client.width - (offset.left + width)
+				right: client.width - (offset.left + width),
+				top: offset.top,
+				bottom: client.height - (offset.top + height)
 			};
 		}
  		// Get the dimensions of the parent item
