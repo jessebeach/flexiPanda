@@ -7,7 +7,7 @@
 /**
  * FlexiPanda - a jQuery plugin.
  *
- * Create simple, elegant dropdwn menus.
+ * Create simple, elegant dropdown menus.
  *
  * Author: Jesse Beach
  * Author URI: http://qemist.us
@@ -15,7 +15,11 @@
  * Author Github: https://github.com/jessebeach
  */
 
-(function ($) {		
+(function ($) {
+	// Private variables
+	var textDirection = $('html').get(0).dir,
+	textDirection = (textDirection) ? textDirection : 'ltr';
+
 	// Private function definitions
 	function clearDelay(event) {
 		event.stopPropagation();
@@ -84,7 +88,9 @@
 		.closest('ul')
 		.trigger('debug');
 	}
-	
+	/**
+	 * Adds an fp-level class to each list based on its depth in the menu.
+	 */
 	function markListLevels($elements, level) {
 		$elements
 		.addClass('fp-level-' + level)
@@ -97,9 +103,9 @@
 		}
 	}
 	/**
-	 * 
+	 * Determines if the dimenions are outside the bounds of the viewport.
 	 */
-	function checkBounds(dimensions, tolerance) {
+	function checkBounds(dimensions) {
 		return {
 			left: (dimensions.left === undefined) ? undefined : (dimensions.left >= 0),
 			top: (dimensions.top === undefined) ? undefined : (dimensions.top >= 0),
@@ -108,23 +114,33 @@
 		};
 	}
 	/**
-	 * @todo This needs to be updated for RTL language support.
+	 * Moves elements around the page based on a vector object.
 	 *
 	 * param vectors {object}
 	 */
 	function move(vectors) {
 		var $this = $(this),
+		elem = $this.get(0),
 		offset = $this.offset(),
 		coords = {};
-		if (vectors['right']) {
+		if (vectors['right'] && textDirection === 'ltr') {
 			coords.left = (offset.left + vectors['right']);
 		}
+		if (vectors['left'] && textDirection === 'rtl') {
+			coords.left = (offset.left - vectors['left']);
+		}
+		if (vectors['bottom']) {
+			coords.top = (offset.top + vectors['bottom']);
+		}
 		if (vectors['top']) {
-			coords.top = (offset.top + vectors['top']);
+			coords.top = (offset.top - vectors['top']);
 		}
 		// Move the item.
 		$this.offset(coords);
 	}
+	/**
+	 * Responds to the rebounded event.
+	 */
 	function reposition(event) {
 		event.stopPropagation();
 		var $this = $(this),
@@ -166,6 +182,9 @@
 		// before child lists.
 		$this.find('.fp-level-' + (data.level + 1)).trigger('rebounded');
 	}
+	/**
+	 * Saves the dimensions of each item in its data() object.
+	 */
 	function setItemData(event) {
 		event.stopPropagation();
 		var $this = $(this),
@@ -226,10 +245,16 @@
 			data.dimensions.ideal.bottom = client.height - (data.dimensions.ideal.top + data.dimensions.item.height);
 		}
 		if (data.dimensions.parentList) {
-			data.dimensions.ideal.left = data.dimensions.parentList.left + data.dimensions.parentList.width;
-			data.dimensions.ideal.right = (client.width > (data.dimensions.parentList.left + data.dimensions.parentList.width + 10)) ? (client.width - (data.dimensions.ideal.left + data.dimensions.item.width)) : 0;
-			if (client.width < (data.dimensions.parentList.left + data.dimensions.parentList.width + 10))
-				var hello = data.dimensions.ideal.right;
+			/* LTR text */
+			if (textDirection === 'ltr' || textDirection === 'undefined') {
+				data.dimensions.ideal.left = data.dimensions.parentList.left + data.dimensions.parentList.width;
+				data.dimensions.ideal.right = client.width - (data.dimensions.ideal.left + data.dimensions.item.width);
+			}
+			/* RTL text */
+			if (textDirection === 'rtl') {
+				data.dimensions.ideal.left = data.dimensions.parentList.left - data.dimensions.parentList.width;
+				data.dimensions.ideal.right = client.width - (data.dimensions.ideal.left - data.dimensions.item.width);
+			}
 		}
 	}
 	function listMaker(data) {
@@ -287,9 +312,14 @@
 	}
 	var methods = {
 		init : function (options) {
-			// build main options before element iteration
+			// Add the dir attribute to the HTML element if it does not exist.
+			// This is part of RTL language support.
+			if ($('html').attr('dir') === undefined) {
+				$('html').attr('dir', textDirection);
+			}
+			// Build main options before element iteration.
 			var opts = $.extend({}, $.fn.flexiPanda.defaults, options);
-			// iterate over matched elements
+			// Iterate over matched elements.
 			return this.each(function () {
 				var $root = $(this);
 				// Build element specific options. Uses the Metadata plugin if available
@@ -302,6 +332,7 @@
 				// Basic setup
 				$root
 				.addClass('fp-root fp-list')
+				.removeClass('no-js')
 				.each(function (index, element) {
 					$(this).data('flexiPanda', {
 						timers: [],

@@ -9,7 +9,6 @@
 .pulldown ul {
   list-style: none;
   margin: 0;
-  /*outline: 1px dotted gray;*/
   padding: 0;
 }
 
@@ -18,13 +17,11 @@
 }
 
 .pulldown ul {
-  background-color: white;
   box-shadow: 0px 3px 5px #444;
-  left: 18em; /* LTR */
   position: absolute;
   top: 0;
   visibility: hidden;
-  width: 18em;
+  min-width: 18em;
   z-index: 200;
 }
 
@@ -48,7 +45,6 @@
 
 .pulldown li:hover > ul,
 .pulldown .fp-trail > ul { /* Show the sub-menus */
-  left: 18em;
   visibility: visible;
 }
 
@@ -63,6 +59,18 @@
   position: relative;
   width: auto;
 }
+
+/* @group No javascript */
+
+html[dir="ltr"] .pulldown.no-js ul {
+  left: 18em;
+}
+
+html[dir="rtl"] .pulldown.no-js ul {
+  right: 18em;
+}
+
+/* @end */
 
 /* @end */
 
