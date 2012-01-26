@@ -1,0 +1,35 @@
+{
+    "name": "flexiPanda",
+    "version": "0.1",
+    "title": "jQuery.flexiPanda()",
+    "author": {
+        "name": "J. Renée Beach",
+        "url": "https://github.com/jessebeach"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "MIT-LICENSE.txt"
+        }
+    ],
+    "dependencies": {
+        "jquery": ">=1.7.x"
+    },
+    "description": "",
+    "keywords": [
+        "dropdowns",
+        "responsive"
+    ],
+    "homepage": "https://github.com/jessebeach/flexiPanda",
+    "maintainers": [
+        {
+            "name": "Jesse Beach",
+            "url": "https://github.com/jessebeach"
+        }
+    ],
+    "files": [
+        "jquery.flexiPanda.js",
+        "css/jquery.flexiPanda.css",
+        "css/jquery.flexiPanda.style.css"
+    ]
+}
