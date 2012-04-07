@@ -20,7 +20,7 @@
 		return null;
 	}
 	// Replace 'pluginName' with the name of your plugin.
-	var plugin = 'pluginName',
+	var plugin = 'flexiPanda',
 	// A private reference to this $plugin object.
 	$plugin,
 	// Local copy of jQuery.
@@ -95,32 +95,28 @@
 	 */
 	function establishPath(event) {
 		event.stopPropagation();
-		$(this)
-		.trigger('reset')
-		.siblings('li')
-		.trigger('activated')
-		.end()
-		.parentsUntil('.fp-root')
-		.filter('li')
-		.siblings('li')
-		.trigger('activated');
+		$(this);
 	}
 	/**
 	 * Handles the hover event of li elements.
 	 */
 	function itemHover(event) {
-		event.stopPropagation();
-		$(this)
-		.closest('.fp-root')
-		.trigger('reset')
-		.end()
-		.closest('ul')
-		.trigger('rebounded')
-		.end()
-		.trigger('pathSelected')
+	  var $root = $(event.delegateTarget),
+	  $item = $(event.currentTarget);
+	  
+	  $item
 		.addClass('fp-trail fp-hovered')
+		.trigger('pathSelected')
 		.closest('ul')
-		.trigger('debug');
+	  // Deal with window collisions.
+		.trigger('rebounded')
+	  // Go up one level and clean parent paths.
+		// .trigger('debug')
+		.end();
+		
+		// Clear hover intent.
+		$root
+		.trigger('reset');
 	}
 	/**
 	 * Hangles the click event of li elements.
@@ -506,6 +502,18 @@
 				// Get lists and items.
 				$ul = $wrapper.find('ul'),
 				$li = $wrapper.find('li');
+				// Bind event handlers.
+				$wrapper
+				.on('rebounded.flexiPanda', 'ul', {edge: options.edge}, reposition)
+				.on('refresh.flexiPanda', 'ul, li', setItemData)
+				.on('clean.flexiPanda', 'li', doClean)
+				.on('debug.flexiPanda', 'ul', (options.debug) ? debug : false)
+				.on('pathSelected.flexiPanda', 'li', establishPath);
+				
+				$root
+				.on('reset.flexiPanda', clearDelay)
+				.on('clean.flexiPanda', doClean);
+
 				// Basic setup
 				$ul
 				.addClass('fp-list')
@@ -516,6 +524,7 @@
 						level: NaN
 					});
 				});
+
 				$li
 				.addClass('fp-item')
 				.each(function (index, element) {
@@ -526,19 +535,16 @@
 				});
 				// Indicate the level of each menu.
 				markListLevels($root, 0);
-				// Bind event handlers.
-				$root
-				.on('reset.flexiPanda', clearDelay)
-				.on('clean.flexiPanda', doClean)
-				.on('clean.flexiPanda', 'li', doClean)
-				.on('refresh.flexiPanda', 'ul, li', setItemData)
-				.on('rebounded.flexiPanda', 'ul', {edge: options.edge}, reposition)
-				.on('debug.flexiPanda', 'ul, li', (options.debug) ? debug : false)
-				.on('pathSelected.flexiPanda', 'li', establishPath)
-				// Establish item data.
-				.trigger('refresh')
+				// Trigger setup events.
+				$ul
 				// Move sub menus that might be positioned outside the viewport.
 				.trigger('rebounded')
+				// Trigger debugging.
+				.trigger('debug', {enable: options.debug});
+				
+				$li
+				// Establish item data.
+				.trigger('refresh')
 				// Trigger debugging.
 				.trigger('debug', {enable: options.debug});
 				
@@ -552,7 +558,7 @@
 				case 'hover' :
 					// Hover mode
 					$root
-					.on('mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, toTrigger: 'clean'}, buildDelay)
+					.on('mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, args: 'clean'}, buildDelay)
 					.on('mouseenter.flexiPanda.hoverMode', 'li', itemHover);
 					break;
 				}
@@ -569,9 +575,11 @@
 			parent = $();
 			if (data.type === 'item') {
 				parent = this.closest('.fp-list').closest('.fp-item');
+				return this.pushStack(parent.get());
 			}
 			if (data.type === 'list') {
 				parent = this.closest('.fp-item');
+				return this.pushStack(parent.get());
 			}
 			return this.pushStack(parent.get());
 		},
@@ -580,9 +588,11 @@
 			parent = $();
 			if (data.type === 'item') {
 				parent = this.closest('.fp-list').closest('.fp-item').closest('.fp-list');
+				return this.pushStack(parent.get());
 			}
 			if (data.type === 'list') {
 				parent = this.closest('.fp-item').closest('.fp-list');
+				return this.pushStack(parent.get());
 			}
 			return this.pushStack(parent.get());
 		}
