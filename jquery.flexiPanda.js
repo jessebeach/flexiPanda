@@ -494,58 +494,46 @@
 			options = $.extend({}, $.fn.flexiPanda.defaults, options);
 			// Iterate over matched elements.
 			return this.each(function () {
-			  // Wrap the list in a div to provide an anchor.
-				var $root = $(this).wrap($('<div>')			  
+			  var $root = $(this),
+			  // Wrap the list in a div to provide a positioning context.
+				$wrapper = $root.wrap($('<div>')			  
   				.css({
   					height: '100%',
   					position: 'relative'
   				})
-  				.addClass('fp-root fp-list')
-				).parent();				
+  				.addClass('fp-wrapper')
+				).parent(),				
 				// Get lists and items.
-				var $ul = $root.find('ul');
-				var $li = $root.find('li');
+				$ul = $wrapper.find('ul'),
+				$li = $wrapper.find('li');
 				// Basic setup
 				$ul
 				.addClass('fp-list')
 				.each(function (index, element) {
 					$(this).data('flexiPanda', {
-						timers: [],
 						processed: false,
 						type: 'list',
 						level: NaN
 					});
 				});
-				
 				$li
 				.addClass('fp-item')
 				.each(function (index, element) {
 					$(this).data('flexiPanda', {
-						timers: [],
 						processed: false,
 						type: 'item'
 					});
 				});
-				
-				$root
-				.each(function (index, element) {
-					$(this).data('flexiPanda', {
-						timers: [],
-						processed: false,
-						type: 'root',
-						level: 0
-					});
-				});
 				// Indicate the level of each menu.
-				markListLevels($root.children('ul'), 0);
+				markListLevels($root, 0);
 				// Bind event handlers.
 				$root
-				.on('reset.flexiPanda', 'li', clearDelay)
+				.on('reset.flexiPanda', clearDelay)
+				.on('clean.flexiPanda', doClean)
 				.on('clean.flexiPanda', 'li', doClean)
 				.on('refresh.flexiPanda', 'ul, li', setItemData)
 				.on('rebounded.flexiPanda', 'ul', {edge: options.edge}, reposition)
 				.on('debug.flexiPanda', 'ul, li', (options.debug) ? debug : false)
-				.on('activated.flexiPanda', 'li', {delay: options.delays.items, toTrigger: 'clean'}, buildDelay)
 				.on('pathSelected.flexiPanda', 'li', establishPath)
 				// Establish item data.
 				.trigger('refresh')
