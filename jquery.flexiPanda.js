@@ -42,27 +42,41 @@
 	 */
 	function clearDelay(event) {
 		var $this = $(this);
-		var timers = $this.data().flexiPanda.timers;
-		while (timers.length > 0) {
-			clearTimeout(timers.pop());
+		var data = $this.data().flexiPanda;
+		if ('timers' in data) {
+			while (data.timers.length > 0) {
+				clearTimeout(data.timers.pop());
+			}
 		}
 	}
 	/**
 	 * Create a delay to call a function on an element.
 	 */
-	function setDelay(context, fn, options, $timerBin) {
-		// Bind the function designated in event.data.toTrigger
-		// to $(this) and pass it to the setTimeout.
-		// The bind is necessary so that trigger is called on the correct
-		// pulldown element, rendering 'this' to the correct context.
-		var func = $.proxy(fn, context, (options.toTrigger) ? options.toTrigger : ''),
-		timeout = setTimeout(func, options.delay),
-		timers = $timerBin.data().flexiPanda.timers;
-		timers.push(timeout);
+	function setDelay(fn, context, options) {
+		// Nothing to do without a function.
+		if (fn === undefined) {
+			return null;
+		}
+		var context = context || this,
+		$context = ('jquery' in context) ? context : $(context),
+		options = options || {},
+		proxy = $.proxy(fn, context, ('args' in options) ? options.args : null),
+		delay = ('delay' in options) ? options.delay : 500,
+		timeout = setTimeout(proxy, delay);
+		// Add a timer to the context
+		var data = $context.data().flexiPanda;
+		if (data.timers === undefined) {
+			data.timers = [];
+		}
+		data.timers.push(timeout);
 		context.trigger('debug');
 	}
+  /**
+   *
+   */
 	function buildDelay (event) {
-		setDelay($(event.target), $.fn.trigger, {delay: event.data.delay, toTrigger: event.data.toTrigger}, $(event.delegateTarget));
+	  event.data = ('data' in event) ? event.data : {};
+		setDelay($.fn.trigger, $(this), {'delay': event.data.delay || null, 'args': event.data.args || null});
 	}
 	/**
 	 * Clean the interaction classes from the element and its children.
