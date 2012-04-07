@@ -205,12 +205,12 @@
 	/**
 	 * Shifts the item lists with margins.
 	 */
-	function shiftPosition(data, opts) {
+	function shiftPosition(data, options) {
 		var $this = $(this),
 		vectors = {top: {dir: 'top', sign: ''}, bottom: {dir: 'top', sign: '-'}},
 		vector = '',
-		tolerance = opts.tolerance,
-		buffer = opts.buffer,
+		tolerance = options.tolerance,
+		buffer = options.buffer,
 		delta = 0,
 		occlusionFix = {},
 		fixes = 0;
@@ -477,37 +477,21 @@
 				$('html').attr('dir', textDirection);
 			}
 			// Build main options before element iteration.
-			var opts = $.extend({}, $.fn.flexiPanda.defaults, options);
+			options = $.extend({}, $.fn.flexiPanda.defaults, options);
 			// Iterate over matched elements.
 			return this.each(function () {
-				var $root = $(this).wrap($('<div>').addClass('fp-root fp-list')).parent();
-				// Build element specific options. Uses the Metadata plugin if available
-				// @see http://docs.jquery.com/Plugins/Metadata/metadata
-				var o = $.meta ? $.extend({}, opts, $root.data()) : opts;
-				
+			  // Wrap the list in a div to provide an anchor.
+				var $root = $(this).wrap($('<div>')			  
+  				.css({
+  					height: '100%',
+  					position: 'relative'
+  				})
+  				.addClass('fp-root fp-list')
+				).parent();				
 				// Get lists and items.
 				var $ul = $root.find('ul');
 				var $li = $root.find('li');
 				// Basic setup
-				$root
-				.each(function (index, element) {
-					$(this).data('flexiPanda', {
-						timers: [],
-						debug: o.debug,
-						processed: false,
-						type: 'root',
-						level: 0
-					});
-				})
-				.on('reset.flexiPanda', 'li', clearDelay)
-				.on('clean.flexiPanda', 'li', doClean)
-				.on('refresh.flexiPanda', 'ul, li', setItemData)
-				.on('rebounded.flexiPanda', 'ul', {edge: opts.edge}, reposition)
-				.on('debug.flexiPanda', 'ul, li', (opts.debug) ? debug : false)
-				.on('activated.flexiPanda', 'li', {delay: o.delays.items, toTrigger: 'clean'}, buildDelay)
-				.on('pathSelected.flexiPanda', 'li', establishPath)
-				.trigger('refresh');
-				
 				$ul
 				.addClass('fp-list')
 				.each(function (index, element) {
@@ -527,26 +511,37 @@
 						processed: false,
 						type: 'item'
 					});
-				})
-				.trigger('refresh');
+				});
 				
+				$root
+				.each(function (index, element) {
+					$(this).data('flexiPanda', {
+						timers: [],
+						processed: false,
+						type: 'root',
+						level: 0
+					});
+				});
 				// Indicate the level of each menu.
 				markListLevels($root.children('ul'), 0);
-				
-				// Trigger the rebounded event on the root element to move sub menus
-				// that might be positioned outside the viewport.
+				// Bind event handlers.
 				$root
-				.trigger('rebounded');
-				
-				if (opts.debug) {
-					$root.trigger('debug');
-					$ul.trigger('debug');
-					$li.trigger('debug');
-				}
-				
+				.on('reset.flexiPanda', 'li', clearDelay)
+				.on('clean.flexiPanda', 'li', doClean)
+				.on('refresh.flexiPanda', 'ul, li', setItemData)
+				.on('rebounded.flexiPanda', 'ul', {edge: options.edge}, reposition)
+				.on('debug.flexiPanda', 'ul, li', (options.debug) ? debug : false)
+				.on('activated.flexiPanda', 'li', {delay: options.delays.items, toTrigger: 'clean'}, buildDelay)
+				.on('pathSelected.flexiPanda', 'li', establishPath)
+				// Establish item data.
+				.trigger('refresh')
+				// Move sub menus that might be positioned outside the viewport.
+				.trigger('rebounded')
+				// Trigger debugging.
+				.trigger('debug', {enable: options.debug});
 				
 				// Set up the behavior mode
-				switch (o.mode) {
+				switch (options.mode) {
 				case 'click' :
 				// Click mode$li
 					$li
@@ -555,16 +550,10 @@
 				case 'hover' :
 					// Hover mode
 					$root
-					.on('mouseleave.flexiPanda.hoverMode', {delay: o.delays.menu, toTrigger: 'clean'}, buildDelay)
+					.on('mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, toTrigger: 'clean'}, buildDelay)
 					.on('mouseenter.flexiPanda.hoverMode', 'li', itemHover);
 					break;
 				}
-				// Set html. This may be unnecessary.
-				$('html')
-				.css({
-					height: '100%',
-					position: 'relative'
-				});
 			});
 		},
 		destroy : function () {
