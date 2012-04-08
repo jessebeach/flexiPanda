@@ -578,8 +578,7 @@
 					.on('mouseenter.flexiPanda.hoverMode', '.fp-root', buildClearDelay)
 					.on('mouseleave.flexiPanda.hoverMode', '.fp-root', {delay: options.delays.menu, args: 'exit'}, buildTriggerDelay)
 					.on('exit.flexiPanda', '.fp-root', cleanMenu)
-					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', {delay: options.delays.item, args: 'hovered'}, buildTriggerDelay)
-					.on('hovered.flexiPanda.hoverMode', '.fp-item', itemHover);
+					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', itemHover);
 					break;
 				}
 			});
