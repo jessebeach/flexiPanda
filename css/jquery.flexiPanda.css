@@ -30,14 +30,10 @@
 .pulldown li {
   z-index: 50;
 }
-
-.pulldown li:hover,
-.pulldown li.fp-hovered {
+.fp-wrapper li.fp-hovered {
   z-index: 51; /* Pull the active trail li's above the other li's */
 }
-
-.pulldown li:hover > ul,
-.pulldown .fp-trail > ul { /* Show the sub-menus */
+.fp-wrapper .fp-trail > ul { /* Show the sub-menus */
   visibility: visible;
 }
 

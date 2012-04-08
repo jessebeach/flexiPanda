@@ -71,9 +71,9 @@
 		data.timers.push(timeout);
 		context.trigger('debug');
 	}
-  /**
-   *
-   */
+	/**
+	 *
+	 */
 	function buildDelay (event) {
 	  event.data = ('data' in event) ? event.data : {};
 		setDelay($.fn.trigger, $(this), {'delay': event.data.delay || null, 'args': event.data.args || null});
@@ -81,42 +81,38 @@
 	/**
 	 * Clean the interaction classes from the element and its children.
 	 */
-	function doClean(event) {
+	function cleanItem(event) {
 		event.stopPropagation();
-		var $this = $(this);
-		$this
-		.find('.fp-hovered').andSelf()
-		.removeClass('fp-trail fp-hovered fp-clicked')
-		.trigger('reset')
-		.trigger('debug');
+		$(this)
+		.removeClass('fp-trail fp-active fp-hovered fp-clicked');
 	}
 	/**
-	 * Set interaction classes on the hovered element and it's ancestors.
+	 *
 	 */
-	function establishPath(event) {
-		event.stopPropagation();
-		$(this);
+	function cleanMenu(event) {
+		$(this)
+		.find('.fp-trail')
+		.removeClass('fp-trail fp-active fp-hovered fp-clicked');
 	}
 	/**
 	 * Handles the hover event of li elements.
 	 */
 	function itemHover(event) {
-	  var $root = $(event.delegateTarget),
-	  $item = $(event.currentTarget);
-	  
-	  $item
-		.addClass('fp-trail fp-hovered')
-		.trigger('pathSelected')
-		.closest('ul')
-	  // Deal with window collisions.
-		.trigger('rebounded')
-	  // Go up one level and clean parent paths.
-		// .trigger('debug')
-		.end();
-		
-		// Clear hover intent.
-		$root
-		.trigger('reset');
+		event.stopPropagation();
+		var $root = $(event.delegateTarget);
+		$(this)
+		.closest($root)
+		.find('.fp-trail')
+		.trigger('clean')
+		.end()
+		.end()
+		.addClass('fp-trail fp-active')
+		.parentsUntil($root)
+		.filter('.fp-item')
+		.addClass('fp-trail')
+		.flexiPanda('parentList')
+		// Deal with window collisions.
+		.trigger('rebounded');
 	}
 	/**
 	 * Hangles the click event of li elements.
@@ -506,13 +502,12 @@
 				$wrapper
 				.on('rebounded.flexiPanda', 'ul', {edge: options.edge}, reposition)
 				.on('refresh.flexiPanda', 'ul, li', setItemData)
-				.on('clean.flexiPanda', 'li', doClean)
-				.on('debug.flexiPanda', 'ul', (options.debug) ? debug : false)
-				.on('pathSelected.flexiPanda', 'li', establishPath);
+				.on('clean.flexiPanda', 'li', cleanItem)
+				.on('debug.flexiPanda', 'ul', (options.debug) ? debug : false);
 				
 				$root
 				.on('reset.flexiPanda', clearDelay)
-				.on('clean.flexiPanda', doClean);
+				.on('exit.flexiPanda', cleanMenu);
 
 				// Basic setup
 				$ul
@@ -557,9 +552,11 @@
 					break;
 				case 'hover' :
 					// Hover mode
-					$root
-					.on('mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, args: 'clean'}, buildDelay)
+					$wrapper
 					.on('mouseenter.flexiPanda.hoverMode', 'li', itemHover);
+					$root
+					.on('mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, args: 'exit'}, buildDelay)
+					.on('mouseenter.flexiPanda.hoverMode', clearDelay);
 					break;
 				}
 			});
@@ -595,6 +592,9 @@
 				return this.pushStack(parent.get());
 			}
 			return this.pushStack(parent.get());
+		},
+		root : function () {
+			return this.pushStack(this.closest('.fp-root > ul').get());
 		}
 	};
 

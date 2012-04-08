@@ -9,15 +9,15 @@
   box-shadow: 0px 3px 5px #444;
   min-width: 18em;
 }
-
 .pulldown li:hover,
 .pulldown a:hover {
   cursor: pointer;
 }
-
-.fp-root li:hover,
-.fp-root .fp-trail {
+.fp-wrapper .fp-trail {
   background-color: rgba(0, 255, 255, 0.5);
+}
+.fp-wrapper .fp-active {
+  background-color: rgba(255, 100, 255, 0.5);
 }
 
 /* @end */
