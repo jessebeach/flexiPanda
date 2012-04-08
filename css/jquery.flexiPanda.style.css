@@ -14,10 +14,10 @@
   cursor: pointer;
 }
 .fp-wrapper .fp-trail {
-  background-color: rgba(0, 255, 255, 0.5);
+  background-color: rgba(120, 155, 155, 1);
 }
 .fp-wrapper .fp-active {
-  background-color: rgba(255, 100, 255, 0.5);
+  background-color: rgba(255, 100, 255, 1);
 }
 
 /* @end */

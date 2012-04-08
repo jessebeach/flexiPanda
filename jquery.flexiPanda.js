@@ -101,17 +101,21 @@
 		event.stopPropagation();
 		var $root = $(event.delegateTarget);
 		$(this)
+		// Clean out all .fp-trail classes.
 		.closest($root)
 		.find('.fp-trail')
 		.trigger('clean')
 		.end()
 		.end()
+		// Trace the active trail.
 		.addClass('fp-trail fp-active')
 		.parentsUntil($root)
 		.filter('.fp-item')
 		.addClass('fp-trail')
-		.flexiPanda('parentList')
+		.end()
+		.end()
 		// Deal with window collisions.
+		.flexiPanda('parentList')
 		.trigger('rebounded');
 	}
 	/**
@@ -563,7 +567,7 @@
 		},
 		destroy : function () {
 			return this.each(function () {
-				$(window).unbind('.flexiPanda');
+				$(this).off('.flexiPanda');
 			});
 		},
 		// Custom traversal functions

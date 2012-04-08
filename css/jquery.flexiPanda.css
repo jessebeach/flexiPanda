@@ -22,15 +22,14 @@
   visibility: hidden;
 }
 
-.pulldown li,
-.pulldown a {
+.pulldown li {
   position: relative;
 }
 
-.pulldown li {
+.fp-wrapper ul {
   z-index: 50;
 }
-.fp-wrapper li.fp-hovered {
+.fp-wrapper .fp-active ul {
   z-index: 51; /* Pull the active trail li's above the other li's */
 }
 .fp-wrapper .fp-trail > ul { /* Show the sub-menus */
@@ -40,7 +39,6 @@
 .pulldown a {
   display: block;
   line-height: 1em; /* this prevents the value "normal" from being returned as the line-height */
-  position: relative;
   width: auto;
 }
 
