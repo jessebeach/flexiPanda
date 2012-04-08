@@ -48,6 +48,7 @@
 				clearTimeout(data.timers.pop());
 			}
 		}
+		$this.trigger('debug');
 	}
 	/**
 	 * Create a delay to call a function on an element.
@@ -82,7 +83,7 @@
 	 * Clean the interaction classes from the element and its children.
 	 */
 	function cleanItem(event) {
-		event.stopPropagation();
+		event.stopImmediatePropagation();
 		$(this)
 		.removeClass('fp-trail fp-active fp-hovered fp-clicked');
 	}
@@ -98,25 +99,29 @@
 	 * Handles the hover event of li elements.
 	 */
 	function itemHover(event) {
-		event.stopPropagation();
-		var $root = $(event.delegateTarget);
-		$(this)
-		// Clean out all .fp-trail classes.
-		.closest($root)
-		.find('.fp-trail')
-		.trigger('clean')
-		.end()
-		.end()
-		// Trace the active trail.
-		.addClass('fp-trail fp-active')
-		.parentsUntil($root)
-		.filter('.fp-item')
-		.addClass('fp-trail')
-		.end()
-		.end()
-		// Deal with window collisions.
-		.flexiPanda('parentList')
-		.trigger('rebounded');
+		if (!event.hoverProcessed) {
+			var $root = $(event.delegateTarget);
+			$(this)
+			// Clean out all .fp-trail classes.
+			.closest($root)
+			.find('.fp-trail')
+			.trigger('clean')
+			.end()
+			.end()
+			// Trace the active trail.
+			.addClass('fp-trail fp-active')
+			.parentsUntil($root)
+			.filter('.fp-item')
+			.addClass('fp-trail')
+			.end()
+			.end()
+			// Deal with window collisions.
+			.flexiPanda('parentList')
+			.trigger('rebounded');
+		}
+		// Propagation shouldn't be stopped here, but this function
+		// should only run once.
+		event.hoverProcessed = true;
 	}
 	/**
 	 * Hangles the click event of li elements.
@@ -325,6 +330,7 @@
 		// processed yet. This function gets called a lot and it 
 		// interacts heavily with the DOM, so it should be run without cause.
 		if (!cache || !data.processed) {
+			data.classes = this.classList;
 			var $parentItem = $this.flexiPanda('parentItem'),
 			$parentList = $this.flexiPanda('parentList'),
 			offset = NaN,
@@ -490,7 +496,7 @@
 			options = $.extend({}, $.fn.flexiPanda.defaults, options);
 			// Iterate over matched elements.
 			return this.each(function () {
-			  var $root = $(this),
+			  var $root = $(this).addClass('fp-root'),
 			  // Wrap the list in a div to provide a positioning context.
 				$wrapper = $root.wrap($('<div>')			  
   				.css({
@@ -504,14 +510,11 @@
 				$li = $wrapper.find('li');
 				// Bind event handlers.
 				$wrapper
-				.on('rebounded.flexiPanda', 'ul', {edge: options.edge}, reposition)
-				.on('refresh.flexiPanda', 'ul, li', setItemData)
-				.on('clean.flexiPanda', 'li', cleanItem)
-				.on('debug.flexiPanda', 'ul', (options.debug) ? debug : false);
-				
-				$root
-				.on('reset.flexiPanda', clearDelay)
-				.on('exit.flexiPanda', cleanMenu);
+				.on('rebounded.flexiPanda', '.fp-list', {edge: options.edge}, reposition)
+				.on('refresh.flexiPanda', '.fp-list, .fp-item', setItemData)
+				.on('clean.flexiPanda', '.fp-item', cleanItem)
+				.on('debug.flexiPanda', '.fp-list', (options.debug) ? debug : false)
+				.on('exit.flexiPanda', '.fp-root', cleanMenu);
 
 				// Basic setup
 				$ul
@@ -550,17 +553,16 @@
 				// Set up the behavior mode
 				switch (options.mode) {
 				case 'click' :
-				// Click mode$li
-					$li
-					.bind('click.flexiPanda.clickMode', itemClick);
+				// Click mode
+					$wrapper
+					.on('click.flexiPanda.clickMode', '.fp-item', itemClick);
 					break;
 				case 'hover' :
 					// Hover mode
 					$wrapper
-					.on('mouseenter.flexiPanda.hoverMode', 'li', itemHover);
-					$root
-					.on('mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, args: 'exit'}, buildDelay)
-					.on('mouseenter.flexiPanda.hoverMode', clearDelay);
+					.on('mouseenter.flexiPanda.hoverMode', '.fp-root', clearDelay)
+					.on('mouseleave.flexiPanda.hoverMode', '.fp-root', {delay: options.delays.menu, args: 'exit'}, buildDelay)
+					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', itemHover);
 					break;
 				}
 			});
