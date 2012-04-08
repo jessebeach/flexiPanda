@@ -36,19 +36,22 @@
 	html = document.documentElement,
 	textDirection = (html.dir) ? html.dir : 'ltr';
 
-	// Private function definitions
 	/**
 	 * Clear all the timers on an element.
 	 */
-	function clearDelay(event) {
-		var $this = $(this);
-		var data = $this.data().flexiPanda;
+	function clearDelay(context) {
+		var context = context || this,
+		$context = ('jquery' in context) ? context : $(context);
+		var data = $context.data()[plugin];
 		if ('timers' in data) {
-			while (data.timers.length > 0) {
-				clearTimeout(data.timers.pop());
+			while (data.timers.timeouts.length > 0) {
+				clearTimeout(data.timers.timeouts.pop());
+			}
+			while (data.timers.intervals.length > 0) {
+				clearInterval(data.timers.intervals.pop());
 			}
 		}
-		$this.trigger('debug');
+		$context.trigger('debug');
 	}
 	/**
 	 * Create a delay to call a function on an element.
@@ -63,19 +66,30 @@
 		options = options || {},
 		proxy = $.proxy(fn, context, ('args' in options) ? options.args : null),
 		delay = ('delay' in options) ? options.delay : 500,
-		timeout = setTimeout(proxy, delay);
+		timeout;
 		// Add a timer to the context
-		var data = $context.data().flexiPanda;
+		var data = $context.data()[plugin];
+		// Store timeouts and intervals on the object.
 		if (data.timers === undefined) {
-			data.timers = [];
+			data.timers = {timeouts: [], intervals: []};
 		}
-		data.timers.push(timeout);
-		context.trigger('debug');
+		if ('type' in options && options.type === 'interval') {
+			data.timers.intervals.push(setInterval(proxy, delay));
+		} else {
+			data.timers.timeouts.push(setTimeout(proxy, delay));
+		}
+		$context.trigger('debug');
 	}
 	/**
 	 *
 	 */
-	function buildDelay (event) {
+	function buildClearDelay(event) {
+		clearDelay(this);
+	}
+	/**
+	 *
+	 */
+	function buildTriggerDelay (event) {
 	  event.data = ('data' in event) ? event.data : {};
 		setDelay($.fn.trigger, $(this), {'delay': event.data.delay || null, 'args': event.data.args || null});
 	}
@@ -560,8 +574,8 @@
 				case 'hover' :
 					// Hover mode
 					$wrapper
-					.on('mouseenter.flexiPanda.hoverMode', '.fp-root', clearDelay)
-					.on('mouseleave.flexiPanda.hoverMode', '.fp-root', {delay: options.delays.menu, args: 'exit'}, buildDelay)
+					.on('mouseenter.flexiPanda.hoverMode', '.fp-root', buildClearDelay)
+					.on('mouseleave.flexiPanda.hoverMode', '.fp-root', {delay: options.delays.menu, args: 'exit'}, buildTriggerDelay)
 					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', itemHover);
 					break;
 				}
