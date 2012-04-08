@@ -5,12 +5,12 @@
 
 /* @group Appearance */
 
-.pulldown ul {
+.fp-wrapper ul {
   box-shadow: 0px 3px 5px #444;
   min-width: 18em;
 }
-.pulldown li:hover,
-.pulldown a:hover {
+.fp-wrapper li:hover,
+.fp-wrapper a:hover {
   cursor: pointer;
 }
 .fp-wrapper .fp-trail {

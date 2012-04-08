@@ -5,63 +5,32 @@
 
 /* @group Behavior */
 
-.pulldown,
-.pulldown ul {
+.fp-wrapper {
+  position: relative;
+}
+.fp-list {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.pulldown {
-  position: relative;
-}
-
-.pulldown ul {
   position: absolute;
-  top: 0;
-  visibility: hidden;
-}
-
-.pulldown li {
-  position: relative;
-}
-
-.fp-wrapper ul {
   z-index: 50;
 }
-.fp-wrapper .fp-active ul {
-  z-index: 51; /* Pull the active trail li's above the other li's */
+.fp-item {
+  position: relative;
 }
-.fp-wrapper .fp-trail > ul { /* Show the sub-menus */
+.fp-hidden {
+	visibility: hidden;
+}
+.fp-trail > .fp-list { /* Show the sub-menus */
   visibility: visible;
 }
-
-.pulldown a {
+.fp-active > .fp-list {
+  z-index: 51; /* Pull the active trail li's above the other li's */
+}
+.fp-wrapper a {
   display: block;
   line-height: 1em; /* this prevents the value "normal" from being returned as the line-height */
   width: auto;
 }
-
-/* @group No javascript */
-
-html[dir="ltr"] .pulldown.no-js ul {
-  left: 18em;
-}
-
-html[dir="rtl"] .pulldown.no-js ul {
-  right: 18em;
-}
-
-html[dir="ltr"] .pulldown.no-js li + li {
-  margin-left: 0;
-  padding-left: 0;
-}
-
-html[dir="rtl"] .pulldown.no-js li + li {
-  margin-right: 0;
-  padding-right: 0;
-}
-
-/* @end */
 
 /* @end */

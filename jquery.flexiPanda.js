@@ -568,9 +568,26 @@
 			});
 		},
 		destroy : function () {
-			return this.each(function () {
-				$(this).off('.flexiPanda');
+			var $wrapper = this,
+			$menu;
+			// Find the wrapper
+			if (!$wrapper.hasClass('fp-wrapper')) {
+				$wrapper = this.closest('.fp-wrapper');
+			}
+			$menu = $wrapper.children('.fp-root');
+			$debug = $wrapper.find('.fp-debug');
+			// Remove event handlers.
+			$wrapper.off('.flexiPanda').find('*').each(function () {
+				var $this = $(this);
+				// Remove fp- namespaced classes.
+				$this[0].className = $this[0].className.replace(/\bfp.*?\b/g, '');
 			});
+			// Remove debug elements.
+			$debug.remove();
+			// Unwrap the element
+			$menu.unwrap();
+			// Return the menu item for chaining.
+			return this.pushStack($menu.get());
 		},
 		// Custom traversal functions
 		parentItem : function () {
