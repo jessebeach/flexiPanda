@@ -64,6 +64,8 @@
 		var context = context || this,
 		$context = ('jquery' in context) ? context : $(context),
 		options = options || {},
+		// 'args' here needs to be made more robust so it isn't assumed that the value
+		// is a single string.
 		proxy = $.proxy(fn, context, ('args' in options) ? options.args : null),
 		delay = ('delay' in options) ? options.delay : 500,
 		timeout;
@@ -524,11 +526,10 @@
 				$li = $wrapper.find('li');
 				// Bind event handlers.
 				$wrapper
-				.on('rebounded.flexiPanda', '.fp-list', {edge: options.edge}, reposition)
 				.on('refresh.flexiPanda', '.fp-list, .fp-item', setItemData)
+				.on('rebounded.flexiPanda', '.fp-list', {edge: options.edge}, reposition)
 				.on('clean.flexiPanda', '.fp-item', cleanItem)
-				.on('debug.flexiPanda', '.fp-list', (options.debug) ? debug : false)
-				.on('exit.flexiPanda', '.fp-root', cleanMenu);
+				.on('debug.flexiPanda', '.fp-list, .fp-item', (options.debug) ? debug : false);
 
 				// Basic setup
 				$ul
@@ -576,7 +577,9 @@
 					$wrapper
 					.on('mouseenter.flexiPanda.hoverMode', '.fp-root', buildClearDelay)
 					.on('mouseleave.flexiPanda.hoverMode', '.fp-root', {delay: options.delays.menu, args: 'exit'}, buildTriggerDelay)
-					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', itemHover);
+					.on('exit.flexiPanda', '.fp-root', cleanMenu)
+					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', {delay: options.delays.item, args: 'hovered'}, buildTriggerDelay)
+					.on('hovered.flexiPanda.hoverMode', '.fp-item', itemHover);
 					break;
 				}
 			});
