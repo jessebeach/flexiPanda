@@ -7,7 +7,7 @@
 /**
  * FlexiPanda - a jQuery plugin.
  *
- * Create simple, elegant dropdown menus.
+ * Create robust, elegant dropdown menus.
  *
  * Author: Jesse Beach
  * Author URI: http://qemist.us
@@ -638,11 +638,11 @@
 		dev: false,
 		delays: {
 			menu: 1000,
-			items: 200
+			item: 200
 		},
 		mode: 'hover',
+		'hide-levels-after': 1,
 		debug: false,
-		dataIndex: 'flexiPanda',
 		edge: {
 			tolerance: 10,
 			buffer: 14
