@@ -118,6 +118,13 @@
 		if (!event.hoverProcessed) {
 			var $root = $(event.delegateTarget);
 			$(this)
+			// Stop hover events on timeouts on siblings.
+			.siblings()
+			.map(function(index, element) {
+				clearDelay($(this));
+			})
+			.end()
+			.end()
 			// Clean out all .fp-trail classes.
 			.closest($root)
 			.find('.fp-trail')
@@ -578,7 +585,8 @@
 					.on('mouseenter.flexiPanda.hoverMode', '.fp-root', buildClearDelay)
 					.on('mouseleave.flexiPanda.hoverMode', '.fp-root', {delay: options.delays.menu, args: 'exit'}, buildTriggerDelay)
 					.on('exit.flexiPanda', '.fp-root', cleanMenu)
-					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', itemHover);
+					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', {delay: options.delays.item, args: 'hovered'}, buildTriggerDelay)
+					.on('hovered.flexiPanda.hoverMode', '.fp-item', itemHover);
 					break;
 				}
 			});
