@@ -52,19 +52,19 @@ ul > .fp-debug {
   height: 0;
   visibility: hidden;
 }
-.fp-level-0 {
+.fp-level-1 {
 	background-color: rgb(235,255,255);
 }
 
-.fp-level-1 {
+.fp-level-2 {
 	background-color: rgb(190,200,255);
 }
 
-.fp-level-2 {
+.fp-level-3 {
 	background-color: rgb(120,215,255);
 }
 
-.fp-level-3 {
+.fp-level-4 {
 	background-color: rgb(35,235,180);
 }
 
