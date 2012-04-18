@@ -34,3 +34,15 @@
 }
 
 /* @end */
+
+/* @group Layout */
+
+/* @group Horizontal */
+
+.fp-horizontal > .fp-list > li {
+	float: left;
+}
+
+/* @end */
+
+/* @end */

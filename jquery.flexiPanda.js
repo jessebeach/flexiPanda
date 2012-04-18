@@ -177,10 +177,34 @@
 			if (level > visibleAfter) {
 				$this.addClass('fp-hidden');
 			}
+			else {
+				$this.addClass('fp-visible');
+			}
 		});
 		$lists = $lists.children('li').children('ul');
 		if ($lists.length > 0) {
 			setLevelVisibility($lists, visibleAfter);
+		}
+	}
+	/**
+	 *
+	 */
+	function setLevelPositioning($lists, positionedAfter) {
+		var level;
+		$lists
+		.each(function (index, element) {
+			var $this = $(this);
+			level = $(this).data().flexiPanda.level;
+			if (level > positionedAfter) {
+				$this.addClass('fp-pegged');
+			}
+			else {
+				$this.addClass('fp-unpegged');
+			}
+		});
+		$lists = $lists.children('li').children('ul');
+		if ($lists.length > 0) {
+			setLevelPositioning($lists, positionedAfter);
 		}
 	}
 	/**
@@ -582,12 +606,14 @@
 				markListLevels($root, 1);
 				// Set visibility
 				setLevelVisibility($root, options['hide-levels-after']);
+				// Set positioning
+				setLevelPositioning($root, options['position-levels-after']);
 				// Set orientation.
 				setOrientation.call($wrapper, options['orientation']);
 				// Bind event handlers.
 				$wrapper
 				.on('refresh.flexiPanda', '.fp-list, .fp-item', setItemData)
-				.on('rebounded.flexiPanda', '.fp-list', {edge: options.edge}, reposition)
+				.on('rebounded.flexiPanda', '.fp-pegged', {edge: options.edge}, reposition)
 				.on('clean.flexiPanda', '.fp-item', cleanItem)
 				.on('debug.flexiPanda', '.fp-list, .fp-item', (options.debug) ? debug : false);
 				// Set up the behavior mode
@@ -688,14 +714,16 @@
 		
 	// FlexiPanda plugin defaults.
 	$.fn.flexiPanda.defaults = {
-		dev: false,
+		dev: true,
 		delays: {
 			menu: 1000,
 			item: 200
 		},
 		mode: 'hover',
 		'hide-levels-after': 1,
-		debug: false,
+		'position-levels-after': 2,
+		orientation: 'horizontal',
+		debug: true,
 		edge: {
 			tolerance: 10,
 			buffer: 14
