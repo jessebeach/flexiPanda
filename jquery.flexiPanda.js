@@ -154,15 +154,50 @@
 	/**
 	 * Adds an fp-level class to each list based on its depth in the menu.
 	 */
-	function markListLevels($elements, level) {
-		$elements
+	function markListLevels($lists, level) {
+		$lists
 		.addClass('fp-level-' + level)
 		.each(function (index, element) {
 			$(this).data().flexiPanda.level = level;
 		});
-		var $lists = $elements.children('li').children('ul');
+		$lists = $lists.children('li').children('ul');
 		if ($lists.length > 0) {
 			markListLevels($lists, (level + 1));
+		}
+	}
+	/**
+	 *
+	 */
+	function setLevelVisibility($lists, visibleAfter) {
+		var level;
+		$lists
+		.each(function (index, element) {
+			var $this = $(this);
+			level = $(this).data().flexiPanda.level;
+			if (level > visibleAfter) {
+				$this.addClass('fp-hidden');
+			}
+		});
+		$lists = $lists.children('li').children('ul');
+		if ($lists.length > 0) {
+			setLevelVisibility($lists, visibleAfter);
+		}
+	}
+	/**
+	 * 
+	 */
+	function setOrientation(orientation) {
+		var $this = $(this);
+		switch (orientation) {
+		case 'horizontal':
+			$this.addClass('fp-horizontal');
+			break;
+		case 'vertical':
+			$this.addClass('fp-vertical');
+			break;
+		default:
+			$this.addClass('fp-horizontal');
+			break;
 		}
 	}
 	/**
@@ -524,13 +559,6 @@
 				// Get lists and items.
 				$ul = $wrapper.find('ul'),
 				$li = $wrapper.find('li');
-				// Bind event handlers.
-				$wrapper
-				.on('refresh.flexiPanda', '.fp-list, .fp-item', setItemData)
-				.on('rebounded.flexiPanda', '.fp-list', {edge: options.edge}, reposition)
-				.on('clean.flexiPanda', '.fp-item', cleanItem)
-				.on('debug.flexiPanda', '.fp-list, .fp-item', (options.debug) ? debug : false);
-
 				// Basic setup
 				$ul
 				.addClass('fp-list')
@@ -551,20 +579,17 @@
 					});
 				});
 				// Indicate the level of each menu.
-				markListLevels($root, 0);
-				// Trigger setup events.
-				$ul
-				// Move sub menus that might be positioned outside the viewport.
-				.trigger('rebounded')
-				// Trigger debugging.
-				.trigger('debug', {enable: options.debug});
-				
-				$li
-				// Establish item data.
-				.trigger('refresh')
-				// Trigger debugging.
-				.trigger('debug', {enable: options.debug});
-				
+				markListLevels($root, 1);
+				// Set visibility
+				setLevelVisibility($root, options['hide-levels-after']);
+				// Set orientation.
+				setOrientation.call($wrapper, options['orientation']);
+				// Bind event handlers.
+				$wrapper
+				.on('refresh.flexiPanda', '.fp-list, .fp-item', setItemData)
+				.on('rebounded.flexiPanda', '.fp-list', {edge: options.edge}, reposition)
+				.on('clean.flexiPanda', '.fp-item', cleanItem)
+				.on('debug.flexiPanda', '.fp-list, .fp-item', (options.debug) ? debug : false);
 				// Set up the behavior mode
 				switch (options.mode) {
 				case 'click' :
@@ -581,6 +606,18 @@
 					.on('mouseenter.flexiPanda.hoverMode', '.fp-item', itemHover);
 					break;
 				}
+				// Trigger setup events.
+				$ul
+				// Move sub menus that might be positioned outside the viewport.
+				.trigger('rebounded')
+				// Trigger debugging.
+				.trigger('debug', {enable: options.debug});
+				
+				$li
+				// Establish item data.
+				.trigger('refresh')
+				// Trigger debugging.
+				.trigger('debug', {enable: options.debug});
 			});
 		},
 		destroy : function () {
