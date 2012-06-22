@@ -714,7 +714,6 @@
 		
 	// FlexiPanda plugin defaults.
 	$.fn.flexiPanda.defaults = {
-		dev: true,
 		delays: {
 			menu: 1000,
 			item: 200
@@ -723,7 +722,7 @@
 		'hide-levels-after': 1,
 		'position-levels-after': 2,
 		orientation: 'horizontal',
-		debug: true,
+		debug: false,
 		edge: {
 			tolerance: 10,
 			buffer: 14
