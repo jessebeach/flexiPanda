@@ -1,0 +1,67 @@
+/** 
+* @file
+* Default dropdown behavior definitions.
+*/
+
+/* @group Behavior */
+
+.pulldown,
+.pulldown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pulldown {
+  position: relative;
+}
+
+.pulldown ul {
+  position: absolute;
+  top: 0;
+  visibility: hidden;
+}
+
+.pulldown li {
+  position: relative;
+}
+
+.pulldown ul {
+  z-index: 50;
+}
+.pulldown li:hover ul {
+  z-index: 51; /* Pull the active trail li's above the other li's */
+}
+.pulldown li:hover > ul { /* Show the sub-menus */
+  visibility: visible;
+}
+
+.pulldown a {
+  display: block;
+  line-height: 1em; /* this prevents the value "normal" from being returned as the line-height */
+  width: auto;
+}
+
+/* @group Language direction */
+
+html[dir="ltr"] .pulldown ul {
+  left: 18em;
+}
+
+html[dir="rtl"] .pulldown ul {
+  right: 18em;
+}
+
+html[dir="ltr"] .pulldown li + li {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+html[dir="rtl"] .pulldown li + li {
+  margin-right: 0;
+  padding-right: 0;
+}
+
+/* @end */
+
+/* @end */
