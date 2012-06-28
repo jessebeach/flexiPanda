@@ -7,40 +7,104 @@
 
 .fp-wrapper {
   position: relative;
+  overflow: hidden;
 }
 .fp-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  position: absolute;
-  z-index: 50;
 }
 .fp-item {
+  display: block;
+}
+.fp-box {
   position: relative;
 }
-.fp-hidden {
-	visibility: hidden;
+.fp-dormant {
+	display: none;
+}
+.fp-calculate {
+  display: block !important;
+  visibility: hidden !important;
+  width: 100% !important;
 }
 .fp-trail > .fp-list { /* Show the sub-menus */
-  visibility: visible;
+  display: block;
 }
 .fp-active > .fp-list {
   z-index: 51; /* Pull the active trail li's above the other li's */
 }
-.fp-wrapper a {
+.fp-wrapper .fp-box {
   display: block;
   line-height: 1em; /* this prevents the value "normal" from being returned as the line-height */
   width: auto;
 }
+.fp-link {
+  display: block;
+}
+.fp-handle {
+  bottom: 0;
+  display: block;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 60px;
+  z-index: 1;
+}
+.fp-handle + * {
+  margin-right: 60px;
+}
+.fp-back .fp-handle {
+  left: 0;
+  right: auto;
+}
+.fp-back .fp-handle + * {
+  margin-left: 60px;
+  margin-right: 0;
+}
+.fp-handle:hover {
+  cursor: pointer;
+}
 
 /* @end */
 
-/* @group Layout */
+/* @group Modes */
 
-/* @group Horizontal */
+/* @group Hover */
 
-.fp-horizontal > .fp-list > li {
+.fp-mode-hover .fp-list {
+  z-index: 50;
+}
+.fp-mode-hover .fp-list.fp-level-2,
+.fp-mode-hover .fp-list.fp-level-2 .fp-list {
+  position: absolute;
+}
+.fp-mode-hover .fp-item {
+  position: relative;
+}
+/* This needs to be made RTL friendly */
+.fp-mode-hover.fp-horizontal > .fp-list > .fp-item {
 	float: left;
+}
+
+/* @end */
+
+/* @group Slider */
+
+.fp-mode-slider.fp-wrapper {
+  width: 100%;
+}
+.fp-mode-slider .fp-list {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  position: absolute;
+  width: 100%;
+}
+.fp-mode-slider .fp-level-1 .fp-list {
+  left: 100%;
+  top: 0;
 }
 
 /* @end */
