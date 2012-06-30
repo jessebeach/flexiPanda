@@ -109,7 +109,7 @@
     }
   }
   /**
-   *
+   * This needs to be made more generic and less slide-y
    */
   function initItems(event) {
     event.stopImmediatePropagation();
@@ -160,7 +160,9 @@
     setOrientation.call($wrapper, options['orientation']);
     // Trigger setup events.
     $ul
-    // Trigger debugging.
+    // Move sub menus that might be positioned outside the viewport.
+    .trigger('rebounded')
+    // Trigger debugging.$ul
     .trigger('debug', {enable: options.debug});
     
     $li
@@ -466,6 +468,16 @@
     // Trigger refresh on the child lists. Parent lists have to be repositioned
     // before child lists.
     $this.find('.fp-level-' + (data.level + 1)).trigger('rebounded');
+  }
+  /**
+   *
+   */
+  function hoverSetup(event) {
+    var $wrapper = $(this);
+    // Mark up the lists and items.
+    $wrapper
+    .trigger('listChange');
+    
   }
   /**
    *
@@ -855,13 +867,14 @@
         $wrapper
         .delegate('.fp-list, .fp-item', 'debug.flexiPanda', {}, (options.debug) ? debug : function () {return false; })
         .delegate('.fp-item', 'prepare.flexiPanda', {options: options}, insertItemHandles)
-        // Called when items are added or removed.
+        // Called when items are added or removed, including the initialization, when all the items are added.
         .bind('listChange.flexiPanda', initItems);
         // Set up the behavior mode
         switch (options.mode) {
         case 'click' :
         // Click mode
           $wrapper
+          .bind('setup.flexiPanda.clickMode', clickSetup)
           .delegate('.fp-item', 'click.flexiPanda.clickMode', itemClick)
           .delegate('.fp-list, .fp-item', 'refresh.flexiPanda', setItemData)
           .delegate('.fp-pegged', 'rebounded.flexiPanda', {edge: options.edge}, reposition)
@@ -872,6 +885,7 @@
         case 'hover' :
           // Hover mode
           $wrapper
+          .bind('setup.flexiPanda.hoverMode', hoverSetup)
           .delegate('.fp-root', 'mouseenter.flexiPanda.hoverMode', buildClearDelay)
           .delegate('.fp-root', 'mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, args: 'exit'}, buildTriggerDelay)
           .delegate('.fp-root', 'exit.flexiPanda', cleanMenu)
@@ -879,10 +893,7 @@
           .delegate('.fp-pegged', 'rebounded.flexiPanda', {edge: options.edge}, reposition)
           .delegate('.fp-item', 'clean.flexiPanda', cleanItem)
           .delegate('.fp-item', 'mouseenter.flexiPanda.hoverMode', activateItem)
-          .addClass('fp-mode-hover');					
-          $ul
-          // Move sub menus that might be positioned outside the viewport.
-          .trigger('rebounded');
+          .addClass('fp-mode-hover');
           break;
         case 'slider' :
           // Mobile slider mode
@@ -1009,7 +1020,7 @@
     'hide-levels-after': 1,
     'position-levels-after': 2,
     orientation: 'horizontal',
-    debug: true,
+    debug: false,
     edge: {
       tolerance: 10,
       buffer: 14
