@@ -121,7 +121,7 @@
    * Deal with responsive mode switching.
    */
   var Responsivizer = function (options) {
-    var currentBreak = '';
+    var currentBreak = '0';
     var breakPoints = {};
     var updated = false;
     /**
@@ -169,7 +169,17 @@
      *
      */
     function getBreakPoint () {
-      return currentBreak;
+      var br;
+      var candidate;
+      var screen = getScreenWidth();
+      for (br in breakPoints) {
+        if (breakPoints.hasOwnProperty(br)) {
+          if (Number(br) <= screen && (Number(br) > Number(candidate) || Number(br) === 0)) {
+            candidate = br;
+          }
+        }
+      }
+      return candidate;
     }
     /**
      * Check what breakpoint the screen is in.
@@ -196,17 +206,7 @@
      *
      */
     function getBreakPointHandler () {
-      var br;
-      var candidate;
-      var screen = getScreenWidth();
-      for (br in breakPoints) {
-        if (breakPoints.hasOwnProperty(br)) {
-          if (Number(br) <= screen && (Number(br) > Number(candidate) || Number(br) === 0)) {
-            candidate = br;
-          }
-        }
-      }
-      return breakPoints[candidate];
+      return breakPoints[getBreakPoint()];
     }
     /**
      *
@@ -1033,14 +1033,12 @@
         $wrapper
         .trigger('setup');
         // Register a custom 'breakChanged' event on the document.
-        var f = $.proxy(respond.breakChangeHandler, respond, $wrapper, options);
+        var f = $.proxy(respond.breakChangeHandler, respond, $wrapper);
         $(document).bind('breakChanged' + '.' + plugin, f);
         // Register a handler on the window resize event.
-        f = $.proxy(respond.breakCheck, respond);
+        f = $.proxy(respond.breakCheck, respond, $wrapper);
         $(window).bind('resize' + '.' + plugin, f);
         $(window).bind('load' + '.' + plugin, f);
-        // Trigger the breakChanged event to init the plugin.
-        $(document).trigger('breakChanged');
       });
     },
     clean : function () {
@@ -1138,17 +1136,17 @@
     }
   };
   // Public functions.
-  $.fn[plugin]['small'] = function (event) {
-    
+  $.fn[plugin]['small'] = function (event, options) {
+    log('small', 'info');
   }
-  $.fn[plugin]['narrow'] = function (event) {
-    
+  $.fn[plugin]['narrow'] = function (event, options) {
+    log('narrow', 'info');
   }
-  $.fn[plugin]['desktop'] = function (event) {
-    
+  $.fn[plugin]['desktop'] = function (event, options) {
+    log('desktop', 'info');
   }
-  $.fn[plugin]['large'] = function (event) {
-    
+  $.fn[plugin]['large'] = function (event, options) {
+    log('large', 'info');
   }
     
   // FlexiPanda plugin defaults.
@@ -1173,7 +1171,7 @@
     },
     'break-points': {
       'default': $.fn[plugin]['small'],
-      '320': $.fn[plugin]['narrow'],
+      '450': $.fn[plugin]['narrow'],
       '740': $.fn[plugin]['desktop'],
       '1120': $.fn[plugin]['large']
     }
