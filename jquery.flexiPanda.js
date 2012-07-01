@@ -68,7 +68,7 @@
     // is a single string.
     // $.proxy works with the signature of (fn, context [, options]) in jQuery 1.7+
     // but not in 1.4, so I had to make my own function.
-    var proxy = fakeProxy(fn, $context, ('args' in options) ? options.args : null);
+    var proxy = buildProxy(fn, $context, ('args' in options) ? options.args : null);
     if ($.isFunction(proxy)) {
       var delay = ('delay' in options) ? options.delay : 500;
       var timeout;
@@ -102,12 +102,127 @@
   /**
    * This exists because $.proxy can't be overloaded in jQuery 1.4.
    */
-  function fakeProxy(fn, context) {
+  function buildProxy(fn, context) {
     var args = Array.prototype.slice.call(arguments, 2);
     return function () {
       fn.apply(context, args);
     }
   }
+  /**
+   *
+   */
+  function log (message, type) {
+    if ('console' in window) {
+      var type = type || 'log';
+      console[type](message);
+    }
+  }
+  /**
+   * Deal with responsive mode switching.
+   */
+  var Responsivizer = function (options) {
+    var currentBreak = '';
+    var breakPoints = {};
+    var updated = false;
+    /**
+     * Object initialization.
+     */
+    function init (options) {
+      setBreakPoints(options);
+      // Return the object's API.
+      this.getCurrentBreakPoint = $.proxy(getBreakPoint, this);
+      this.breakChangeHandler = $.proxy(breakChangeHandler, this);
+      this.breakCheck = $.proxy(breakCheck, this);
+    }
+    /**
+    * Get the screen width.
+    */
+    function getScreenWidth () {
+      return window.innerWidth || document.documentElement.offsetWidth || document.documentElement.clientWidth;
+    }
+    /**
+     *
+     */
+    function setBreakPoints (options) {
+      var br;
+      var index;
+      if (typeof options === 'object') {
+        for (br in options) {
+          if (options.hasOwnProperty(br)) {
+            if (isNaN(br) && br !== 'default') {
+              log('[' + plugin + '] The breakpoint property name \"' + br + '\" is not valid. The property must convert to a number or be the word \"default\".', 'info');
+              continue;
+            }
+            if (typeof options[br] === 'function') {
+              // Represent the default breakpoint as zero internally.
+              index = (br === 'default') ? '0': br;
+              breakPoints[index] = options[br];
+            }
+            else {
+              log('[' + plugin + '] ' + options[br] + ', for the breakpoint ' + br + ' is not a function.', 'info');
+            }
+          }
+        }
+      }
+    }
+    /**
+     *
+     */
+    function getBreakPoint () {
+      return currentBreak;
+    }
+    /**
+     * Check what breakpoint the screen is in.
+     */
+    function breakChangeHandler ($element) {
+      // updated will be set to false when a new breakpoint is encountered.
+      if (!updated) {
+        var callback = getBreakPointHandler();
+        if (typeof callback === 'function') {
+          var args = Array.prototype.slice.call(arguments, 1);
+          // Move the Event object to the first position in the args list.
+          var event = args.pop();
+          args.unshift(event);
+          callback.apply($element, args);
+          updated = true;
+          return;
+        }
+        else {
+          log('The handler for the current breakpoint is not a function.', 'info');
+        }
+      }
+    }
+    /**
+     *
+     */
+    function getBreakPointHandler () {
+      var br;
+      var candidate;
+      var screen = getScreenWidth();
+      for (br in breakPoints) {
+        if (breakPoints.hasOwnProperty(br)) {
+          if (Number(br) <= screen && (Number(br) > Number(candidate) || Number(br) === 0)) {
+            candidate = br;
+          }
+        }
+      }
+      return breakPoints[candidate];
+    }
+    /**
+     *
+     */
+    function breakCheck ($element) {
+      var br = getBreakPoint();
+      if (currentBreak !== br) {
+        // Save the current breakpoint in this scope.
+        currentBreak = br;
+        updated = false;
+        $(document).trigger('breakChanged', $element);
+      }
+    }
+    // Initialize the object.
+    return init.apply(this, arguments);
+  };
   /**
    * This needs to be made more generic and less slide-y
    */
@@ -848,21 +963,24 @@
       options = $.extend({}, $.fn.flexiPanda.defaults, options);
       // Handle screen resizes
       // This could be made much more efficient in jQuery 1.6+ with Callbacks.
-      $(window).bind('resize.flexiPanda', handleResize);
+      $(window).bind('resize' + '.' + plugin, handleResize);
       // Iterate over matched elements.
       return this.each(function () {
         var $root = $(this).addClass('fp-root');
         // Wrap the list in a div to provide a positioning context.
-        var $wrapper = $root.wrap($('<div>')
-          .css({
-            height: '100%',
-            position: 'relative'
+        var $wrapper = $root
+        // Give the root an empty data object for this plugin.
+        .data(plugin, {})
+        // Wrap the element in a controller div. This will keep track of options.
+        .wrap(
+          $('<div>', {
+            'class': 'fp-wrapper'
           })
           .data(plugin, {
             options: options
           })
-          .addClass('fp-wrapper')
-        ).parent();
+        )
+        .parent();
         // Bind event handlers.
         $wrapper
         .delegate('.fp-list, .fp-item', 'debug.flexiPanda', {}, (options.debug) ? debug : function () {return false; })
@@ -909,12 +1027,23 @@
           break;
         default:
         }
+        // Create a responsive handler.
+        var respond = new Responsivizer(options['break-points']);
         // Set up the plugin.
         $wrapper
         .trigger('setup');
+        // Register a custom 'breakChanged' event on the document.
+        var f = $.proxy(respond.breakChangeHandler, respond, $wrapper, options);
+        $(document).bind('breakChanged' + '.' + plugin, f);
+        // Register a handler on the window resize event.
+        f = $.proxy(respond.breakCheck, respond);
+        $(window).bind('resize' + '.' + plugin, f);
+        $(window).bind('load' + '.' + plugin, f);
+        // Trigger the breakChanged event to init the plugin.
+        $(document).trigger('breakChanged');
       });
     },
-    clean: function () {
+    clean : function () {
       return this.each(function () {
         // Clean returns the menu to its resting state.
         $(this).trigger('reset');
@@ -970,7 +1099,7 @@
       }
       return this.pushStack(parent.get());
     },
-    childLists: function () {
+    childLists : function () {
       var children = $();
       // Just return if this is zero length.
       if (this.length === 0) {
@@ -998,7 +1127,7 @@
   };
 
   // Add the plugin to the jQuery fn object.
-  $.fn.flexiPanda = function (method) {
+  $.fn[plugin] = function (method) {
     // Method calling logic
     if (methods[method]) {
       return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
@@ -1008,6 +1137,19 @@
       $.error('Method ' +  method + ' does not exist on jQuery.flexiPanda');
     }
   };
+  // Public functions.
+  $.fn[plugin]['small'] = function (event) {
+    
+  }
+  $.fn[plugin]['narrow'] = function (event) {
+    
+  }
+  $.fn[plugin]['desktop'] = function (event) {
+    
+  }
+  $.fn[plugin]['large'] = function (event) {
+    
+  }
     
   // FlexiPanda plugin defaults.
   $.fn.flexiPanda.defaults = {
@@ -1028,6 +1170,12 @@
     'menu-handles': {
       show: true,
       content: ''
+    },
+    'break-points': {
+      'default': $.fn[plugin]['small'],
+      '320': $.fn[plugin]['narrow'],
+      '740': $.fn[plugin]['desktop'],
+      '1120': $.fn[plugin]['large']
     }
   };
 }(window));

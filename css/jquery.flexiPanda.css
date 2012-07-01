@@ -6,6 +6,7 @@
 /* @group Behavior */
 
 .fp-wrapper {
+  height: 100%;
   position: relative;
 }
 .fp-list {
