@@ -118,112 +118,6 @@
     }
   }
   /**
-   * Deal with responsive mode switching.
-   */
-  var Responsivizer = function (options) {
-    var currentBreak = '0';
-    var breakPoints = {};
-    var updated = false;
-    /**
-     * Object initialization.
-     */
-    function init (options) {
-      setBreakPoints(options);
-      // Return the object's API.
-      this.getCurrentBreakPoint = $.proxy(getBreakPoint, this);
-      this.breakChangeHandler = $.proxy(breakChangeHandler, this);
-      this.breakCheck = $.proxy(breakCheck, this);
-    }
-    /**
-    * Get the screen width.
-    */
-    function getScreenWidth () {
-      return window.innerWidth || document.documentElement.offsetWidth || document.documentElement.clientWidth;
-    }
-    /**
-     *
-     */
-    function setBreakPoints (options) {
-      var br;
-      var index;
-      if (typeof options === 'object') {
-        for (br in options) {
-          if (options.hasOwnProperty(br)) {
-            if (isNaN(br) && br !== 'default') {
-              log('[' + plugin + '] The breakpoint property name \"' + br + '\" is not valid. The property must convert to a number or be the word \"default\".', 'info');
-              continue;
-            }
-            if (typeof options[br] === 'function') {
-              // Represent the default breakpoint as zero internally.
-              index = (br === 'default') ? '0': br;
-              breakPoints[index] = options[br];
-            }
-            else {
-              log('[' + plugin + '] ' + options[br] + ', for the breakpoint ' + br + ' is not a function.', 'info');
-            }
-          }
-        }
-      }
-    }
-    /**
-     *
-     */
-    function getBreakPoint () {
-      var br;
-      var candidate;
-      var screen = getScreenWidth();
-      for (br in breakPoints) {
-        if (breakPoints.hasOwnProperty(br)) {
-          if (Number(br) <= screen && (Number(br) > Number(candidate) || Number(br) === 0)) {
-            candidate = br;
-          }
-        }
-      }
-      return candidate;
-    }
-    /**
-     * Check what breakpoint the screen is in.
-     */
-    function breakChangeHandler ($element) {
-      // updated will be set to false when a new breakpoint is encountered.
-      if (!updated) {
-        var callback = getBreakPointHandler();
-        if (typeof callback === 'function') {
-          var args = Array.prototype.slice.call(arguments, 1);
-          // Move the Event object to the first position in the args list.
-          var event = args.pop();
-          args.unshift(event);
-          callback.apply($element, args);
-          updated = true;
-          return;
-        }
-        else {
-          log('The handler for the current breakpoint is not a function.', 'info');
-        }
-      }
-    }
-    /**
-     *
-     */
-    function getBreakPointHandler () {
-      return breakPoints[getBreakPoint()];
-    }
-    /**
-     *
-     */
-    function breakCheck ($element) {
-      var br = getBreakPoint();
-      if (currentBreak !== br) {
-        // Save the current breakpoint in this scope.
-        currentBreak = br;
-        updated = false;
-        $(document).trigger('breakChanged', $element);
-      }
-    }
-    // Initialize the object.
-    return init.apply(this, arguments);
-  };
-  /**
    * This needs to be made more generic and less slide-y
    */
   function initItems(event) {
@@ -986,7 +880,9 @@
         .delegate('.fp-list, .fp-item', 'debug.flexiPanda', {}, (options.debug) ? debug : function () {return false; })
         .delegate('.fp-item', 'prepare.flexiPanda', {options: options}, insertItemHandles)
         // Called when items are added or removed, including the initialization, when all the items are added.
-        .bind('listChange.flexiPanda', initItems);
+        .bind('listChange.flexiPanda', initItems)
+        // Set the responsive breakpoint callback handlers.
+        .breakUp(options['break-points']);
         // Set up the behavior mode
         switch (options.mode) {
         case 'click' :
@@ -1027,18 +923,9 @@
           break;
         default:
         }
-        // Create a responsive handler.
-        var respond = new Responsivizer(options['break-points']);
         // Set up the plugin.
         $wrapper
         .trigger('setup');
-        // Register a custom 'breakChanged' event on the document.
-        var f = $.proxy(respond.breakChangeHandler, respond, $wrapper);
-        $(document).bind('breakChanged' + '.' + plugin, f);
-        // Register a handler on the window resize event.
-        f = $.proxy(respond.breakCheck, respond, $wrapper);
-        $(window).bind('resize' + '.' + plugin, f);
-        $(window).bind('load' + '.' + plugin, f);
       });
     },
     clean : function () {
@@ -1169,11 +1056,11 @@
       show: true,
       content: ''
     },
-    'break-points': {
-      'default': $.fn[plugin]['small'],
-      '450': $.fn[plugin]['narrow'],
-      '740': $.fn[plugin]['desktop'],
-      '1120': $.fn[plugin]['large']
+  	'break-points': {
+      'default': $.fn.flexiPanda['small'],
+      '450': $.fn.flexiPanda['narrow'],
+      '740': $.fn.flexiPanda['desktop'],
+      '1120': $.fn.flexiPanda['large']
     }
   };
 }(window));
