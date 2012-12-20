@@ -16,25 +16,25 @@
  */
 
 (function (window, undefined) {
-	if (window.jQuery === undefined) {
-		return null;
-	}
-	// Replace 'pluginName' with the name of your plugin.
-	var plugin = 'flexiPanda',
-	// A private reference to this $plugin object.
-	$plugin,
-	// Local copy of jQuery.
-	$ = window.jQuery,
-	// Local copies of context globals.
-	// Use the correct document accordingly with window argument (sandbox)
-	document = window.document,
-	navigator = window.navigator,
-	location = window.location,
-	// Local copy of jQuery.
-	$ = window.jQuery,
-	// Private variables
-	html = document.documentElement,
-	textDirection = (html.dir) ? html.dir : 'ltr';
+  if (window.jQuery === undefined) {
+    return null;
+  }
+  // Replace 'pluginName' with the name of your plugin.
+  var plugin = 'flexiPanda',
+  // A private reference to this $plugin object.
+  $plugin,
+  // Local copy of jQuery.
+  $ = window.jQuery,
+  // Local copies of context globals.
+  // Use the correct document accordingly with window argument (sandbox)
+  document = window.document,
+  navigator = window.navigator,
+  location = window.location,
+  // Local copy of jQuery.
+  $ = window.jQuery,
+  // Private variables
+  html = document.documentElement,
+  textDirection = (html.dir) ? html.dir : 'ltr';
 
   /**
    * Clear all the timers on an element.
@@ -68,12 +68,18 @@
     // is a single string.
     // $.proxy works with the signature of (fn, context [, options]) in jQuery 1.7+
     // but not in 1.4, so I had to make my own function.
-    var proxy = buildProxy(fn, $context, ('args' in options) ? options.args : null);
+    var proxy = fakeProxy(fn, $context, ('args' in options) ? options.args : null);
     if ($.isFunction(proxy)) {
       var delay = ('delay' in options) ? options.delay : 500;
       var timeout;
       // Add a timer to the context
-      var data = $context.data()[plugin];
+      var data = $context.data();
+      if (data && 'plugin' in data) {
+        data = data[plugin];
+      }
+      else {
+        return;
+      }
       // Store timeouts and intervals on the object.
       if (!data.timers) {
         data.timers = {timeouts: [], intervals: []};
@@ -102,7 +108,7 @@
   /**
    * This exists because $.proxy can't be overloaded in jQuery 1.4.
    */
-  function buildProxy(fn, context) {
+  function fakeProxy(fn, context) {
     var args = Array.prototype.slice.call(arguments, 2);
     return function () {
       fn.apply(context, args);
@@ -110,15 +116,6 @@
   }
   /**
    *
-   */
-  function log (message, type) {
-    if ('console' in window) {
-      var type = type || 'log';
-      console[type](message);
-    }
-  }
-  /**
-   * This needs to be made more generic and less slide-y
    */
   function initItems(event) {
     event.stopImmediatePropagation();
@@ -169,9 +166,7 @@
     setOrientation.call($wrapper, options['orientation']);
     // Trigger setup events.
     $ul
-    // Move sub menus that might be positioned outside the viewport.
-    .trigger('rebounded')
-    // Trigger debugging.$ul
+    // Trigger debugging.
     .trigger('debug', {enable: options.debug});
     
     $li
@@ -481,16 +476,6 @@
   /**
    *
    */
-  function hoverSetup(event) {
-    var $wrapper = $(this);
-    // Mark up the lists and items.
-    $wrapper
-    .trigger('listChange');
-    
-  }
-  /**
-   *
-   */
   function insertItemHandles(event) {
     event.stopImmediatePropagation();
     var options = event.data.options;
@@ -532,15 +517,23 @@
     // Add slider controls.
     .find('.fp-list')
     .not('.fp-root')
-    // Add a back button.
-    .prepend(
-      $('<li>', {
-        html: $('<a>', {
-          text: 'back'
-        }),
-        'class': 'fp-back'
-      })
-    )
+    .each(function (index, element) {
+      // Add a back button.
+      var label = '';
+      var $parentItem = $(this).flexiPanda('parentItem');
+      if ($parentItem.length > 0) {
+        label = $parentItem.children('.fp-box').find('.fp-link').text();
+      }
+      $(this)
+      .prepend(
+        $('<li>', {
+          html: $('<a>', {
+            text: (label.length > 0) ? label : Drupal.t('back')
+          }),
+          'class': 'fp-back'
+        })
+      ) 
+    })
     .end()
     .end()
     // Mark up the back buttons.
@@ -857,38 +850,32 @@
       options = $.extend({}, $.fn.flexiPanda.defaults, options);
       // Handle screen resizes
       // This could be made much more efficient in jQuery 1.6+ with Callbacks.
-      $(window).bind('resize' + '.' + plugin, handleResize);
+      $(window).bind('resize.flexiPanda', handleResize);
       // Iterate over matched elements.
       return this.each(function () {
         var $root = $(this).addClass('fp-root');
         // Wrap the list in a div to provide a positioning context.
-        var $wrapper = $root
-        // Give the root an empty data object for this plugin.
-        .data(plugin, {})
-        // Wrap the element in a controller div. This will keep track of options.
-        .wrap(
-          $('<div>', {
-            'class': 'fp-wrapper'
+        var $wrapper = $root.wrap($('<div>')
+          .css({
+            height: '100%',
+            position: 'relative'
           })
           .data(plugin, {
             options: options
           })
-        )
-        .parent();
+          .addClass('fp-wrapper')
+        ).parent();
         // Bind event handlers.
         $wrapper
         .delegate('.fp-list, .fp-item', 'debug.flexiPanda', {}, (options.debug) ? debug : function () {return false; })
         .delegate('.fp-item', 'prepare.flexiPanda', {options: options}, insertItemHandles)
-        // Called when items are added or removed, including the initialization, when all the items are added.
-        .bind('listChange.flexiPanda', initItems)
-        // Set the responsive breakpoint callback handlers.
-        .breakUp(options['break-points']);
+        // Called when items are added or removed.
+        .bind('listChange.flexiPanda', initItems);
         // Set up the behavior mode
         switch (options.mode) {
         case 'click' :
         // Click mode
           $wrapper
-          .bind('setup.flexiPanda.clickMode', clickSetup)
           .delegate('.fp-item', 'click.flexiPanda.clickMode', itemClick)
           .delegate('.fp-list, .fp-item', 'refresh.flexiPanda', setItemData)
           .delegate('.fp-pegged', 'rebounded.flexiPanda', {edge: options.edge}, reposition)
@@ -899,7 +886,6 @@
         case 'hover' :
           // Hover mode
           $wrapper
-          .bind('setup.flexiPanda.hoverMode', hoverSetup)
           .delegate('.fp-root', 'mouseenter.flexiPanda.hoverMode', buildClearDelay)
           .delegate('.fp-root', 'mouseleave.flexiPanda.hoverMode', {delay: options.delays.menu, args: 'exit'}, buildTriggerDelay)
           .delegate('.fp-root', 'exit.flexiPanda', cleanMenu)
@@ -907,7 +893,10 @@
           .delegate('.fp-pegged', 'rebounded.flexiPanda', {edge: options.edge}, reposition)
           .delegate('.fp-item', 'clean.flexiPanda', cleanItem)
           .delegate('.fp-item', 'mouseenter.flexiPanda.hoverMode', activateItem)
-          .addClass('fp-mode-hover');
+          .addClass('fp-mode-hover');					
+          $ul
+          // Move sub menus that might be positioned outside the viewport.
+          .trigger('rebounded');
           break;
         case 'slider' :
           // Mobile slider mode
@@ -928,7 +917,7 @@
         .trigger('setup');
       });
     },
-    clean : function () {
+    clean: function () {
       return this.each(function () {
         // Clean returns the menu to its resting state.
         $(this).trigger('reset');
@@ -984,7 +973,7 @@
       }
       return this.pushStack(parent.get());
     },
-    childLists : function () {
+    childLists: function () {
       var children = $();
       // Just return if this is zero length.
       if (this.length === 0) {
@@ -1012,7 +1001,7 @@
   };
 
   // Add the plugin to the jQuery fn object.
-  $.fn[plugin] = function (method) {
+  $.fn.flexiPanda = function (method) {
     // Method calling logic
     if (methods[method]) {
       return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
@@ -1022,19 +1011,6 @@
       $.error('Method ' +  method + ' does not exist on jQuery.flexiPanda');
     }
   };
-  // Public functions.
-  $.fn[plugin]['small'] = function (event, options) {
-    log('small', 'info');
-  }
-  $.fn[plugin]['narrow'] = function (event, options) {
-    log('narrow', 'info');
-  }
-  $.fn[plugin]['desktop'] = function (event, options) {
-    log('desktop', 'info');
-  }
-  $.fn[plugin]['large'] = function (event, options) {
-    log('large', 'info');
-  }
     
   // FlexiPanda plugin defaults.
   $.fn.flexiPanda.defaults = {
@@ -1047,7 +1023,7 @@
     'hide-levels-after': 1,
     'position-levels-after': 2,
     orientation: 'horizontal',
-    debug: false,
+    debug: true,
     edge: {
       tolerance: 10,
       buffer: 14
@@ -1055,12 +1031,6 @@
     'menu-handles': {
       show: true,
       content: ''
-    },
-  	'break-points': {
-      'default': $.fn.flexiPanda['small'],
-      '450': $.fn.flexiPanda['narrow'],
-      '740': $.fn.flexiPanda['desktop'],
-      '1120': $.fn.flexiPanda['large']
     }
   };
 }(window));

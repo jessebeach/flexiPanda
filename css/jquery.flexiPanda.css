@@ -6,8 +6,8 @@
 /* @group Behavior */
 
 .fp-wrapper {
-  height: 100%;
   position: relative;
+  overflow: hidden;
 }
 .fp-list {
   list-style: none;
@@ -49,7 +49,19 @@
   position: absolute;
   right: 0;
   top: 0;
+  width: 60px;
   z-index: 1;
+}
+.fp-handle + * {
+  margin-right: 60px;
+}
+.fp-back .fp-handle {
+  left: 0;
+  right: auto;
+}
+.fp-back .fp-handle + * {
+  margin-left: 60px;
+  margin-right: 0;
 }
 .fp-handle:hover {
   cursor: pointer;
@@ -64,9 +76,6 @@
 .fp-mode-hover .fp-list {
   z-index: 50;
 }
-.fp-mode-hover .fp-list.fp-pegged {
-  top: 0;
-}
 .fp-mode-hover .fp-list.fp-level-2,
 .fp-mode-hover .fp-list.fp-level-2 .fp-list {
   position: absolute;
@@ -79,23 +88,11 @@
 	float: left;
 }
 
-/* @group Handle */
-
-.fp-mode-hover .fp-handle {
-  width: 1em;
-}
-.fp-mode-hover .fp-handle + * {
-  margin-right: 1em;
-}
-
-/* @end */
-
 /* @end */
 
 /* @group Slider */
 
 .fp-mode-slider.fp-wrapper {
-  overflow: hidden;
   width: 100%;
 }
 .fp-mode-slider .fp-list {
@@ -109,25 +106,6 @@
   left: 100%;
   top: 0;
 }
-
-/* @group Handle */
-
-.fp-mode-slider .fp-handle {
-  width: 60px;
-}
-.fp-mode-slider .fp-handle + * {
-  margin-right: 60px;
-}
-.fp-mode-slider .fp-back .fp-handle {
-  left: 0;
-  right: auto;
-}
-.fp-mode-slider .fp-back .fp-handle + * {
-  margin-left: 60px;
-  margin-right: 0;
-}
-
-/* @end */
 
 /* @end */
 

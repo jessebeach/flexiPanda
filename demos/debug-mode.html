@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>Debug mode demo | Flexi Panda</title>
+		<meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=1" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<link type="text/plain" rel="author" href="/humans.txt" />
+		<script src="../jquery/jquery.min.js"></script>
+		<script src="../jquery.flexiPanda.js"></script>
+		<link href="../css/jquery.flexiPanda.css" type="text/css" rel="stylesheet" />
+		<link href="../css/jquery.flexiPanda.style.css" type="text/css" rel="stylesheet" />
+		<style type="text/css">
+		</style>
+	</head>
+	<body>
+		<ul class="pulldown">
+			<li id="a1">
+				<a href="#">Lorem Ipsum</a>
+				<ul>
+					<li id="a2">
+						<a href="#">Lorem Ipsum</a>
+							<ul>
+								<li id="a3">
+									<a href="#">Lorem Ipsum</a>
+									<ul>
+										<li id="a4">
+											<a href="#">Lorem Ipsum</a>
+										</li>
+										<li>
+											<a href="#">Lorem Ipsum</a>
+										</li>
+										<li>
+											<a href="#">Lorem Ipsum</a>
+										</li>
+										<li>
+											<a href="#">Lorem Ipsum</a>
+										</li>
+										<li>
+											<a href="#">Lorem Ipsum</a>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<a href="#">Lorem Ipsum</a>
+								</li>
+								<li>
+									<a href="#">Lorem Ipsum</a>
+								</li>
+								<li>
+									<a href="#">Lorem Ipsum</a>
+								</li>
+								<li>
+									<a href="#">Lorem Ipsum</a>
+								</li>
+							</ul>
+					</li>
+					<li>
+						<a href="#">Lorem Ipsum</a>
+					</li>
+					<li>
+						<a href="#">Lorem Ipsum</a>
+					</li>
+				</ul>
+			</li>
+			<li id="b1">
+				<a href="#">Lorem Ipsum</a>
+				<ul>
+					<li id="a3">
+						<a href="#">Lorem Ipsum</a>
+						<ul>
+							<li id="a4">
+								<a href="#">Lorem Ipsum</a>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+						</ul>
+					</li>
+					<li>
+						<a href="#">Lorem Ipsum</a>
+						<ul>
+							<li id="a3">
+								<a href="#">Lorem Ipsum</a>
+								<ul>
+									<li id="a4">
+										<a href="#">Lorem Ipsum</a>
+									</li>
+									<li>
+										<a href="#">Lorem Ipsum</a>
+									</li>
+									<li>
+										<a href="#">Lorem Ipsum</a>
+									</li>
+									<li>
+										<a href="#">Lorem Ipsum</a>
+									</li>
+									<li>
+										<a href="#">Lorem Ipsum</a>
+									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+							<li>
+								<a href="#">Lorem Ipsum</a>
+							</li>
+						</ul>
+					</li>
+					<li>
+						<a href="#">Lorem Ipsum</a>
+					</li>
+					<li>
+						<a href="#">Lorem Ipsum</a>
+					</li>
+					<li>
+						<a href="#">Lorem Ipsum</a>
+					</li>
+				</ul>
+			</li>
+			<li id="c1">
+				<a href="#">Lorem Ipsum</a>
+			</li>
+			<li id="d1">
+				<a href="#">Lorem Ipsum</a>
+			</li>
+			<li id="e1">
+				<a href="#">Lorem Ipsum</a>
+			</li>
+		</ul>
+		<script type="text/javascript">
+			$('.pulldown').flexiPanda({
+				mode: 'hover',
+				debug: false,
+				edge: {
+					tolerance: 8,
+					buffer: 14
+				}
+			});
+		</script>
+	</body>
+</html>
